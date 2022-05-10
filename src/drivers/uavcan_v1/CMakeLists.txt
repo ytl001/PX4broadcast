@@ -112,6 +112,7 @@ px4_add_module(
 	INCLUDES
 		${LIBCANARD_DIR}/libcanard/
 		${CMAKE_CURRENT_BINARY_DIR}/dsdlc_generated
+		${CMAKE_CURRENT_SOURCE_DIR}/Publishers
 	SRCS
 		PublicationManager.cpp
 		PublicationManager.hpp
@@ -124,6 +125,7 @@ px4_add_module(
 		Publishers/uORB/uorb_publisher.cpp
 		Subscribers/uORB/uorb_subscriber.cpp
 		${SRCS}
+		Publishers/Publisher.cpp
 		o1heap/o1heap.c
 		o1heap/o1heap.h
 		${LIBCANARD_DIR}/libcanard/canard.c
