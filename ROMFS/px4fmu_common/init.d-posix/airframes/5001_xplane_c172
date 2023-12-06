@@ -9,11 +9,10 @@
 #
 # Airframe: Cessna 172 Skyhawk
 # Compatible Simulator: X-Plane
-# Type: Standard Plane
-# Class: Plane
-# Author: alireza787b
+# @type Standard Plane
+# @maintainer alireza787b <p30planets@gmail.com>
 # Date: Nov 2023
-# Project URL: https://github.com/alireza787b/px4xplane/
+# @url https://github.com/alireza787b/px4xplane/
 #
 # ---- Start of Configuration ----
 
