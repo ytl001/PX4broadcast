@@ -7,7 +7,7 @@
 #
 # Usage: Run with 'make px4_sitl xplane_c172'.
 #
-# Airframe: Cessna 172 Skyhawk
+# @name: Cessna 172 Skyhawk
 # Compatible Simulator: X-Plane
 # @type Standard Plane
 # @maintainer alireza787b <p30planets@gmail.com>
