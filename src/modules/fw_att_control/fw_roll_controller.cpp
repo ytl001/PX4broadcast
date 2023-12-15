@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2020-2022 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2020-2023 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,7 +12,7 @@
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 3. Neither the name PX4 nor the names of its contributors may be
+ * 3. Neither the name ECL nor the names of its contributors may be
  *    used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -32,41 +32,33 @@
  ****************************************************************************/
 
 /**
- * @file ecl_yaw_controller.h
- * Definition of a simple orthogonal coordinated turn yaw PID controller.
- *
- * @author Lorenz Meier <lm@inf.ethz.ch>
- * @author Thomas Gubler <thomasgubler@gmail.com>
- *
- * Acknowledgements:
- *
- *   The control design is based on a design
- *   by Paul Riseborough and Andrew Tridgell, 2013,
- *   which in turn is based on initial work of
- *   Jonathan Challinger, 2012.
+ * @file fw_roll_controller.cpp
+ * Implementation of a simple roll P controller.
  */
 
-#ifndef ECL_YAW_CONTROLLER_H
-#define ECL_YAW_CONTROLLER_H
+#include "fw_roll_controller.h"
+#include <float.h>
+#include <lib/geo/geo.h>
+#include <mathlib/mathlib.h>
 
-#include "ecl_controller.h"
-
-class ECL_YawController :
-	public ECL_Controller
+float RollController::control_roll(float roll_setpoint, float euler_yaw_rate_setpoint, float roll, float pitch)
 {
-public:
-	ECL_YawController() = default;
-	~ECL_YawController() = default;
+	/* Do not calculate control signal with bad inputs */
+	if (!(PX4_ISFINITE(roll_setpoint) &&
+	      PX4_ISFINITE(euler_yaw_rate_setpoint) &&
+	      PX4_ISFINITE(pitch) &&
+	      PX4_ISFINITE(roll))) {
 
-	/**
-	 * @brief Calculates both euler and body yaw rate setpoints.
-	 *
-	 * @param dt Time step [s]
-	 * @param ctrl_data Various control inputs (attitude, body rates, attitdue stepoints, euler rate setpoints, current speeed)
-	 * @return Yaw body rate setpoint [rad/s]
-	 */
-	float control_attitude(const float dt, const ECL_ControlData &ctl_data) override;
+		return _body_rate_setpoint;
+	}
 
-};
+	const float roll_error = roll_setpoint - roll;
+	_euler_rate_setpoint = roll_error / _tc;
 
-#endif // ECL_YAW_CONTROLLER_H
+	/* Transform setpoint to body angular rates (jacobian) */
+	const float roll_body_rate_setpoint_raw = _euler_rate_setpoint - sinf(pitch) *
+			euler_yaw_rate_setpoint;
+	_body_rate_setpoint = math::constrain(roll_body_rate_setpoint_raw, -_max_rate, _max_rate);
+
+	return _body_rate_setpoint;
+}
