@@ -81,8 +81,9 @@ px4_add_romfs_files(
 	4006_gz_px4vision
 	4008_gz_advanced_plane
 
-	5001_xplane_c172
-	5010_xplane_ehang4
+	5001_xplane_cessna172
+	5010_xplane_ehang184
+	5020_xplane_alia250
 
 	6011_gazebo-classic_typhoon_h480
 	6011_gazebo-classic_typhoon_h480.post

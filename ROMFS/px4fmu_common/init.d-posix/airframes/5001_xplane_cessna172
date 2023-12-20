@@ -5,7 +5,7 @@
 # This script configures PX4 SITL for a Cessna 172 Skyhawk, a standard fixed-wing plane.
 # It's tailored for integration with X-Plane, a custom simulator, facilitating real-world scale simulation.
 #
-# Usage: Run with 'make px4_sitl xplane_c172'.
+# Usage: Run with 'make px4_sitl xplane_cessna172'.
 #
 # @name: Cessna 172 Skyhawk
 # Compatible Simulator: X-Plane

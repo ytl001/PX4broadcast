@@ -28,10 +28,13 @@ macro(add_xplane_target TARGET_NAME SYS_AUTOSTART AIRFRAME_FILE)
 endmacro()
 
 # X-Plane Cessna 172 Configuration
-add_xplane_target(xplane_c172 5001 5001_xplane_c172)
+add_xplane_target(xplane_cessna172 5001 5001_xplane_cessna172)
 
-# X-Plane eVTOL Air Taxi - ehang4 Configuration
-add_xplane_target(xplane_ehang4 5010 5010_xplane_ehang4)
+# X-Plane eVTOL Air Taxi (Quad Copter) - ehang184 Configuration
+add_xplane_target(xplane_ehang184 5010 5010_xplane_ehang184)
+
+# X-Plane eVTOL Air Taxi (Quad VTOL) - Alia-250 Configuration
+add_xplane_target(xplane_alia250 5020 5020_xplane_alia250)
 
 # Instructions for adding more X-Plane configurations:
 # To add additional airframe configurations for X-Plane, follow these steps:
