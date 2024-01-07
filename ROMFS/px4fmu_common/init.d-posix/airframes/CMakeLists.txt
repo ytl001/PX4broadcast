@@ -80,6 +80,8 @@ px4_add_romfs_files(
 	4005_gz_x500_vision
 	4006_gz_px4vision
 	4008_gz_advanced_plane
+	4009_gz_r1_rover
+	4010_gz_x500_mono_cam
 
 	5001_xplane_cessna172
 	5010_xplane_ehang184
