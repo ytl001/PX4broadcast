@@ -93,6 +93,7 @@ set(msg_files
 	FigureEightStatus.msg
 	FailsafeFlags.msg
 	FailureDetectorStatus.msg
+	FlightPhaseEstimation.msg
 	FollowTarget.msg
 	FollowTargetEstimator.msg
 	FollowTargetStatus.msg
@@ -192,6 +193,7 @@ set(msg_files
 	SensorsStatus.msg
 	SensorsStatusImu.msg
 	SensorUwb.msg
+	SensorAirflow.msg
 	SystemPower.msg
 	TakeoffStatus.msg
 	TaskStackInfo.msg
