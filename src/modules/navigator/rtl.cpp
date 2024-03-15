@@ -202,38 +202,43 @@ void RTL::on_inactive()
 		break;
 	}
 
-	// Limit inactive calculation to 1Hz
+	// Limit inactive calculation to 0.5Hz
 	hrt_abstime now{hrt_absolute_time()};
 
-	if ((now - _destination_check_time) > 1_s) {
+	if ((now - _destination_check_time) > 2_s) {
 		_destination_check_time = now;
 		setRtlTypeAndDestination();
-
-		const bool global_position_recently_updated = _global_pos_sub.get().timestamp > 0
-				&& hrt_elapsed_time(&_global_pos_sub.get().timestamp) < 10_s;
-
-		rtl_time_estimate_s estimated_time{};
-		estimated_time.valid = false;
-
-		if (_navigator->home_global_position_valid() && global_position_recently_updated) {
-			switch (_rtl_type) {
-			case RtlType::RTL_DIRECT:
-				estimated_time = _rtl_direct.calc_rtl_time_estimate();
-				break;
-
-			case RtlType::RTL_DIRECT_MISSION_LAND:
-			case RtlType::RTL_MISSION_FAST:
-			case RtlType::RTL_MISSION_FAST_REVERSE:
-				estimated_time = _rtl_mission_type_handle->calc_rtl_time_estimate();
-				break;
-
-			default:
-				break;
-			}
-		}
-
-		_rtl_time_estimate_pub.publish(estimated_time);
+		publishRemainingTimeEstimate();
 	}
+
+}
+
+void RTL::publishRemainingTimeEstimate()
+{
+	const bool global_position_recently_updated = _global_pos_sub.get().timestamp > 0
+			&& hrt_elapsed_time(&_global_pos_sub.get().timestamp) < 10_s;
+
+	rtl_time_estimate_s estimated_time{};
+	estimated_time.valid = false;
+
+	if (_navigator->home_global_position_valid() && global_position_recently_updated) {
+		switch (_rtl_type) {
+		case RtlType::RTL_DIRECT:
+			estimated_time = _rtl_direct.calc_rtl_time_estimate();
+			break;
+
+		case RtlType::RTL_DIRECT_MISSION_LAND:
+		case RtlType::RTL_MISSION_FAST:
+		case RtlType::RTL_MISSION_FAST_REVERSE:
+			estimated_time = _rtl_mission_type_handle->calc_rtl_time_estimate();
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	_rtl_time_estimate_pub.publish(estimated_time);
 }
 
 void RTL::on_activation()
@@ -287,6 +292,14 @@ void RTL::on_active()
 	default:
 		break;
 	}
+
+	// Keep publishing remaining time estimates every 2 seconds
+	hrt_abstime now{hrt_absolute_time()};
+
+	if ((now - _destination_check_time) > 2_s) {
+		_destination_check_time = now;
+		publishRemainingTimeEstimate();
+	}
 }
 
 void RTL::setRtlTypeAndDestination()
@@ -294,12 +307,14 @@ void RTL::setRtlTypeAndDestination()
 
 	init_rtl_mission_type();
 
+	uint8_t safe_point_index{0U};
+
 	if (_param_rtl_type.get() != 2) {
 		// check the closest allowed destination.
 		DestinationType destination_type{DestinationType::DESTINATION_TYPE_HOME};
 		PositionYawSetpoint rtl_position;
 		float rtl_alt;
-		findRtlDestination(destination_type, rtl_position, rtl_alt);
+		findRtlDestination(destination_type, rtl_position, rtl_alt, safe_point_index);
 
 		switch (destination_type) {
 		case DestinationType::DESTINATION_TYPE_MISSION_LAND:
@@ -331,9 +346,29 @@ void RTL::setRtlTypeAndDestination()
 			break;
 		}
 	}
+
+	// Publish rtl status
+	_rtl_status_pub.get().timestamp = hrt_absolute_time();
+	_rtl_status_pub.get().safe_points_id = _safe_points_id;
+	_rtl_status_pub.get().is_evaluation_pending = _dataman_state != DatamanState::UpdateRequestWait;
+	_rtl_status_pub.get().has_vtol_approach = false;
+
+	if ((_param_rtl_type.get() == 0) || (_param_rtl_type.get() == 3)) {
+		_rtl_status_pub.get().has_vtol_approach = _home_has_land_approach || _one_rally_point_has_land_approach;
+
+	} else if (_param_rtl_type.get() == 1) {
+		_rtl_status_pub.get().has_vtol_approach = _one_rally_point_has_land_approach;
+	}
+
+	_rtl_status_pub.get().rtl_type = static_cast<uint8_t>(_rtl_type);
+	_rtl_status_pub.get().safe_point_index = safe_point_index;
+
+	_rtl_status_pub.update();
+
 }
 
-void RTL::findRtlDestination(DestinationType &destination_type, PositionYawSetpoint &rtl_position, float &rtl_alt)
+void RTL::findRtlDestination(DestinationType &destination_type, PositionYawSetpoint &rtl_position, float &rtl_alt,
+			     uint8_t &safe_point_index)
 {
 	// set destination to home per default, then check if other valid landing spot is closer
 	rtl_position.alt = _home_pos_sub.get().alt;
@@ -352,8 +387,10 @@ void RTL::findRtlDestination(DestinationType &destination_type, PositionYawSetpo
 	float home_dist{get_distance_to_next_waypoint(_global_pos_sub.get().lat, _global_pos_sub.get().lon, rtl_position.lat, rtl_position.lon)};
 	float min_dist;
 
+	_home_has_land_approach = hasVtolLandApproach(rtl_position);
+
 	if (((_param_rtl_type.get() == 1) && !vtol_in_rw_mode) || (vtol_in_fw_mode && (_param_rtl_approach_force.get() == 1)
-			&& !hasVtolLandApproach(rtl_position))) {
+			&& !_home_has_land_approach)) {
 		// Set minimum distance to maximum value when RTL_TYPE is set to 1 and we are not in RW mode or we forces approach landing for vtol in fw and it is not defined for home.
 		min_dist = FLT_MAX;
 
@@ -394,6 +431,8 @@ void RTL::findRtlDestination(DestinationType &destination_type, PositionYawSetpo
 
 	if (_safe_points_updated) {
 
+		_one_rally_point_has_land_approach = false;
+
 		for (int current_seq = 0; current_seq < _dataman_cache_safepoint.size(); ++current_seq) {
 			mission_item_s mission_safe_point;
 
@@ -416,11 +455,16 @@ void RTL::findRtlDestination(DestinationType &destination_type, PositionYawSetpo
 				PositionYawSetpoint safepoint_position;
 				setSafepointAsDestination(safepoint_position, mission_safe_point);
 
+				bool current_safe_point_has_approaches{hasVtolLandApproach(safepoint_position)};
+
+				_one_rally_point_has_land_approach |= current_safe_point_has_approaches;
+
 				if (((dist + MIN_DIST_THRESHOLD) < min_dist) && (!vtol_in_fw_mode || (_param_rtl_approach_force.get() == 0)
-						|| hasVtolLandApproach(safepoint_position))) {
+						|| current_safe_point_has_approaches)) {
 					min_dist = dist;
 					rtl_position = safepoint_position;
 					destination_type = DestinationType::DESTINATION_TYPE_SAFE_POINT;
+					safe_point_index = current_seq;
 				}
 			}
 		}
@@ -573,7 +617,7 @@ void RTL::parameters_update()
 
 bool RTL::hasMissionLandStart() const
 {
-	return _mission_sub.get().land_start_index > 0;
+	return _mission_sub.get().land_start_index >= 0 && _mission_sub.get().land_index >= 0;
 }
 
 bool RTL::hasVtolLandApproach(const PositionYawSetpoint &rtl_position) const
