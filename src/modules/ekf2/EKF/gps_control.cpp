@@ -123,8 +123,8 @@ void Ekf::controlGpsFusion(const imuSample &imu_delayed)
 
 				bool do_vel_pos_reset = shouldResetGpsFusion();
 
-				if (isYawFailure()
-				    && _control_status.flags.in_air
+				if (_control_status.flags.in_air
+				    && isYawFailure()
 				    && isTimedOut(_time_last_hor_vel_fuse, _params.EKFGSF_reset_delay)
 				    && (_time_last_hor_vel_fuse > _time_last_on_ground_us)) {
 					do_vel_pos_reset = tryYawEmergencyReset();
@@ -246,7 +246,7 @@ bool Ekf::tryYawEmergencyReset()
 	bool success = false;
 
 	/* A rapid reset to the yaw emergency estimate is performed if horizontal velocity innovation checks continuously
-	 * fails while the difference between the yaw emergency estimator and the yas estimate is large.
+	 * fails while the difference between the yaw emergency estimator and the yaw estimate is large.
 	 * This enables recovery from a bad yaw estimate. A reset is not performed if the fault condition was
 	 * present before flight to prevent triggering due to GPS glitches or other sensor errors.
 	 */
