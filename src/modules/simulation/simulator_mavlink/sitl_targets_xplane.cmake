@@ -30,6 +30,9 @@ endmacro()
 # X-Plane Cessna 172 Configuration
 add_xplane_target(xplane_cessna172 5001 5001_xplane_cessna172)
 
+# X-Plane TB 2 Fixed Wing A-Tail Configuration
+add_xplane_target(xplane_tb2 5002 5002_xplane_tb2)
+
 # X-Plane eVTOL Air Taxi (Quad Copter) - ehang184 Configuration
 add_xplane_target(xplane_ehang184 5010 5010_xplane_ehang184)
 
