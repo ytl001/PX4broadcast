@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2020 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2024 ModalAI, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,13 +31,43 @@
  *
  ****************************************************************************/
 
-/**
- * Magnetic declination
- *
- * @group EKF2
- * @volatile
- * @category system
- * @unit deg
- * @decimal 1
- */
-PARAM_DEFINE_FLOAT(EKF2_MAG_DECL, 0);
+#pragma once
+
+#include <px4_platform_common/defines.h>
+#include <px4_platform_common/module.h>
+#include <px4_platform_common/module_params.h>
+#include <px4_platform_common/posix.h>
+#include <px4_platform_common/px4_work_queue/ScheduledWorkItem.hpp>
+#include <uORB/Publication.hpp>
+#include <uORB/PublicationMulti.hpp>
+#include <uORB/SubscriptionInterval.hpp>
+#include <uORB/SubscriptionCallback.hpp>
+#include <uORB/topics/parameter_set_value_request.h>
+
+using namespace time_literals;
+
+class VoxlSaveCalParams : public ModuleBase<VoxlSaveCalParams>, public ModuleParams,
+	public px4::WorkItem
+{
+public:
+	VoxlSaveCalParams();
+	~VoxlSaveCalParams() = default;
+
+	/** @see ModuleBase */
+	static int task_spawn(int argc, char *argv[]);
+
+	/** @see ModuleBase */
+	static int custom_command(int argc, char *argv[]);
+
+	/** @see ModuleBase */
+	static int print_usage(const char *reason = nullptr);
+
+	bool init();
+
+private:
+	void Run() override;
+
+	void save_calibration_parameter_to_file(const char *name, param_type_t type, param_value_u value);
+
+	uORB::SubscriptionCallbackWorkItem _parameter_primary_set_value_request_sub{this, ORB_ID(parameter_primary_set_value_request)};
+};

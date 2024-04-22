@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2020 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2022 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,39 +31,55 @@
  *
  ****************************************************************************/
 
-#pragma once
+/**
+ * @file bootloader_main.c
+ *
+ * FMU-specific early startup code for bootloader
+*/
 
-#include <px4_log.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <termios.h>
+#include "board_config.h"
+#include "bl.h"
 
-#ifdef __PX4_QURT
-#include <drivers/device/qurt/uart.h>
-#define FAR
-#endif
+#include <nuttx/config.h>
+#include <nuttx/board.h>
+#include <chip.h>
+#include <stm32_uart.h>
+#include <arch/board/board.h>
+#include "arm_internal.h"
+#include <px4_platform/gpio.h>
+#include <px4_platform_common/init.h>
 
-class VoxlEscSerial
+extern int sercon_main(int c, char **argv);
+
+__EXPORT void board_on_reset(int status) {}
+
+__EXPORT void stm32_boardinitialize(void)
 {
-public:
-	VoxlEscSerial();
-	virtual ~VoxlEscSerial();
+	/* configure pins */
+	const uint32_t list[] = PX4_GPIO_INIT_LIST;
 
-	int		uart_open(const char *dev, speed_t speed);
-	int		uart_set_baud(speed_t speed);
-	int		uart_close();
-	int		uart_write(FAR void *buf, size_t len);
-	int		uart_read(FAR void *buf, size_t len);
-	bool		is_open() { return _uart_fd >= 0; };
-	int		uart_get_baud() {return _speed; }
+	for (size_t gpio = 0; gpio < arraySize(list); gpio++) {
+		if (list[gpio] != 0) {
+			px4_arch_configgpio(list[gpio]);
+		}
+	}
 
-private:
-	int			_uart_fd = -1;
+	/* configure USB interfaces */
+	stm32_usbinitialize();
+}
 
-#if ! defined(__PX4_QURT)
-	struct termios		_orig_cfg;
-	struct termios		_cfg;
-#endif
+__EXPORT int board_app_initialize(uintptr_t arg)
+{
+	return 0;
+}
 
-	int   _speed = -1;
-};
+void board_late_initialize(void)
+{
+	sercon_main(0, NULL);
+}
+
+extern void sys_tick_handler(void);
+void board_timerhook(void)
+{
+	sys_tick_handler();
+}

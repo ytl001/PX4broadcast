@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2020 PX4 Development Team. All rights reserved.
+ *   Copyright (C) 2022 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,28 +31,10 @@
  *
  ****************************************************************************/
 
-/**
- * Multi-EKF IMUs
- *
- * Maximum number of IMUs to use for Multi-EKF. Set 0 to disable.
- * Requires SENS_IMU_MODE 0.
- *
- * @group EKF2
- * @reboot_required true
- * @min 0
- * @max 4
- */
-PARAM_DEFINE_INT32(EKF2_MULTI_IMU, 0);
+#include <px4_arch/i2c_hw_description.h>
 
-/**
- * Multi-EKF Magnetometers.
- *
- * Maximum number of magnetometers to use for Multi-EKF. Set 0 to disable.
- * Requires SENS_MAG_MODE 0.
- *
- * @group EKF2
- * @reboot_required true
- * @min 0
- * @max 4
- */
-PARAM_DEFINE_INT32(EKF2_MULTI_MAG, 0);
+constexpr px4_i2c_bus_t px4_i2c_buses[I2C_BUS_MAX_BUS_ITEMS] = {
+	initI2CBusExternal(1),
+	initI2CBusInternal(3),
+	initI2CBusInternal(4),
+};
