@@ -38,6 +38,7 @@ px4_add_romfs_files(
 	18001_TF-B1
 
 	# [22000, 22999] Reserve for custom models
+
 )
 
 if(CONFIG_MODULES_SIMULATION_PWM_OUT_SIM)
@@ -155,5 +156,12 @@ if(CONFIG_MODULES_UUV_ATT_CONTROL)
 		60000_uuv_generic
 		60001_uuv_hippocampus
 		60002_uuv_bluerov2_heavy
+	)
+endif()
+
+if(CONFIG_MODULES_SC_RATE_CONTROL)
+	px4_add_romfs_files(
+		# [70000, 79999] Spacecraft-type platforms
+		70000_kth_space_robot
 	)
 endif()

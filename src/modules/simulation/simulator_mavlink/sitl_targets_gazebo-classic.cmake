@@ -88,6 +88,8 @@ if(gazebo_FOUND)
 		iris_rplidar
 		iris_vision
 		omnicopter
+		2d_spacecraft
+		3d_spacecraft
 		plane
 		plane_cam
 		plane_catapult
@@ -113,10 +115,13 @@ if(gazebo_FOUND)
 		ksql_airport
 		mcmillan_airfield
 		ramped_up_wind
+		frictionless
 		sonoma_raceway
 		warehouse
 		windy
 		yosemite
+		space
+		zero_g
 	)
 
 	# find corresponding airframes
