@@ -352,6 +352,8 @@ MissionBase::on_active()
 	} else if (_navigator->get_precland()->is_activated()) {
 		_navigator->get_precland()->on_inactivation();
 	}
+
+	updateAltToAvoidTerrainCollisionAndRepublishTriplet(_mission_item);
 }
 
 void MissionBase::update_mission()
@@ -868,7 +870,6 @@ void MissionBase::publish_navigator_mission_item()
 {
 	navigator_mission_item_s navigator_mission_item{};
 
-	navigator_mission_item.instance_count = _navigator->mission_instance_count();
 	navigator_mission_item.sequence_current = _mission.current_seq;
 	navigator_mission_item.nav_cmd = _mission_item.nav_cmd;
 	navigator_mission_item.latitude = _mission_item.lat;

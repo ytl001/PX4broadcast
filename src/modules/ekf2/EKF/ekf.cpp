@@ -132,6 +132,8 @@ void Ekf::reset()
 	}
 
 	_zero_velocity_update.reset();
+
+	updateParameters();
 }
 
 bool Ekf::update()
@@ -328,6 +330,7 @@ bool Ekf::resetGlobalPosToExternalObservation(double lat_deg, double lon_deg, fl
 		    && fuseDirectStateMeasurement(innov(1), innov_var(1), obs_var, State::pos.idx + 1)
 		   ) {
 			ECL_INFO("fused external observation as position measurement");
+			_state_reset_status.reset_count.posNE++;
 			_time_last_hor_pos_fuse = _time_delayed_us;
 			_last_known_pos.xy() = _state.pos.xy();
 			return true;
@@ -339,6 +342,21 @@ bool Ekf::resetGlobalPosToExternalObservation(double lat_deg, double lon_deg, fl
 
 void Ekf::updateParameters()
 {
+	_params.gyro_noise = math::constrain(_params.gyro_noise, 0.f, 1.f);
+	_params.accel_noise = math::constrain(_params.accel_noise, 0.f, 1.f);
+
+	_params.gyro_bias_p_noise = math::constrain(_params.gyro_bias_p_noise, 0.f, 1.f);
+	_params.accel_bias_p_noise = math::constrain(_params.accel_bias_p_noise, 0.f, 1.f);
+
+#if defined(CONFIG_EKF2_MAGNETOMETER)
+	_params.mage_p_noise = math::constrain(_params.mage_p_noise, 0.f, 1.f);
+	_params.magb_p_noise = math::constrain(_params.magb_p_noise, 0.f, 1.f);
+#endif // CONFIG_EKF2_MAGNETOMETER
+
+#if defined(CONFIG_EKF2_WIND)
+	_params.wind_vel_nsd = math::constrain(_params.wind_vel_nsd, 0.f, 1.f);
+#endif // CONFIG_EKF2_WIND
+
 #if defined(CONFIG_EKF2_AUX_GLOBAL_POSITION) && defined(MODULE_NAME)
 	_aux_global_position.updateParameters();
 #endif // CONFIG_EKF2_AUX_GLOBAL_POSITION

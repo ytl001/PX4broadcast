@@ -104,6 +104,12 @@ void RtlDirect::on_active()
 		set_rtl_item();
 	}
 
+	if (_rtl_state != RTLState::IDLE) { //TODO: rename _rtl_state to _rtl_state_next (when in IDLE we're actually in LAND)
+		//check for terrain collision and update altitude if needed
+		// note: it may trigger multiple times during a RTL, as every time the altitude set is reset
+		updateAltToAvoidTerrainCollisionAndRepublishTriplet(_mission_item);
+	}
+
 	if (_rtl_state == RTLState::LAND && _param_rtl_pld_md.get() > 0) {
 		// Need to update the position and type on the current setpoint triplet.
 		_navigator->get_precland()->on_active();
@@ -332,6 +338,8 @@ void RtlDirect::set_rtl_item()
 			_navigator->set_position_setpoint_triplet_updated();
 		}
 	}
+
+	publish_rtl_direct_navigator_mission_item(); // for logging
 }
 
 RtlDirect::RTLState RtlDirect::getActivationLandState()
@@ -509,4 +517,33 @@ loiter_point_s RtlDirect::sanitizeLandApproach(loiter_point_s land_approach) con
 	}
 
 	return sanitized_land_approach;
+}
+
+void RtlDirect::publish_rtl_direct_navigator_mission_item()
+{
+	navigator_mission_item_s navigator_mission_item{};
+
+	navigator_mission_item.sequence_current = static_cast<uint16_t>(_rtl_state);
+	navigator_mission_item.nav_cmd = _mission_item.nav_cmd;
+	navigator_mission_item.latitude = _mission_item.lat;
+	navigator_mission_item.longitude = _mission_item.lon;
+	navigator_mission_item.altitude = _mission_item.altitude;
+
+	navigator_mission_item.time_inside = get_time_inside(_mission_item);
+	navigator_mission_item.acceptance_radius = _mission_item.acceptance_radius;
+	navigator_mission_item.loiter_radius = _mission_item.loiter_radius;
+	navigator_mission_item.yaw = _mission_item.yaw;
+
+	navigator_mission_item.frame = _mission_item.frame;
+	navigator_mission_item.frame = _mission_item.origin;
+
+	navigator_mission_item.loiter_exit_xtrack = _mission_item.loiter_exit_xtrack;
+	navigator_mission_item.force_heading = _mission_item.force_heading;
+	navigator_mission_item.altitude_is_relative = _mission_item.altitude_is_relative;
+	navigator_mission_item.autocontinue = _mission_item.autocontinue;
+	navigator_mission_item.vtol_back_transition = _mission_item.vtol_back_transition;
+
+	navigator_mission_item.timestamp = hrt_absolute_time();
+
+	_navigator_mission_item_pub.publish(navigator_mission_item);
 }

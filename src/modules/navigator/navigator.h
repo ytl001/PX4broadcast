@@ -249,8 +249,6 @@ public:
 
 	orb_advert_t *get_mavlink_log_pub() { return &_mavlink_log_pub; }
 
-	int mission_instance_count() const { return _mission_result.mission_id; }
-
 	void set_mission_failure_heading_timeout();
 
 	bool get_mission_start_land_available() { return _mission.get_land_start_available(); }
@@ -268,6 +266,7 @@ public:
 	float get_param_mis_takeoff_alt() const { return _param_mis_takeoff_alt.get(); }
 	float get_yaw_timeout() const { return _param_mis_yaw_tmt.get(); }
 	float get_yaw_threshold() const { return math::radians(_param_mis_yaw_err.get()); }
+	float get_nav_min_gnd_dist_param() const { return _param_nav_min_gnd_dist.get(); }
 
 	float get_vtol_back_trans_deceleration() const { return _param_back_trans_dec_mss; }
 
@@ -283,6 +282,8 @@ public:
 	void disable_camera_trigger();
 
 	void mode_completed(uint8_t nav_state, uint8_t result = mode_completed_s::RESULT_SUCCESS);
+
+	void sendWarningDescentStoppedDueToTerrain();
 
 private:
 
@@ -402,6 +403,8 @@ private:
 		(ParamFloat<px4::params::NAV_TRAFF_A_VER>)  _param_nav_traff_a_ver,	/**< avoidance Distance Vertical*/
 		(ParamInt<px4::params::NAV_TRAFF_COLL_T>)   _param_nav_traff_collision_time,
 		(ParamFloat<px4::params::NAV_MIN_LTR_ALT>)   _param_min_ltr_alt,	/**< minimum altitude in Loiter mode*/
+		(ParamFloat<px4::params::NAV_MIN_GND_DIST>)
+		_param_nav_min_gnd_dist,	/**< minimum distance to ground (Mission and RTL)*/
 
 		// non-navigator parameters: Mission (MIS_*)
 		(ParamFloat<px4::params::MIS_TAKEOFF_ALT>) _param_mis_takeoff_alt,

@@ -1069,7 +1069,7 @@ int Navigator::task_spawn(int argc, char *argv[])
 	_task_id = px4_task_spawn_cmd("navigator",
 				      SCHED_DEFAULT,
 				      SCHED_PRIORITY_NAVIGATION,
-				      PX4_STACK_ADJUSTED(2160),
+				      PX4_STACK_ADJUSTED(2200),
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);
 
@@ -1520,6 +1520,13 @@ void Navigator::set_gimbal_neutral()
 	vcmd.param4 = NAN;
 	vcmd.param5 = gimbal_manager_set_attitude_s::GIMBAL_MANAGER_FLAGS_NEUTRAL;
 	publish_vehicle_cmd(&vcmd);
+}
+
+void Navigator::sendWarningDescentStoppedDueToTerrain()
+{
+	mavlink_log_critical(&_mavlink_log_pub, "Terrain collision risk, descent is stopped\t");
+	events::send(events::ID("navigator_terrain_collision_risk"), events::Log::Critical,
+		     "Terrain collision risk, descent is stopped");
 }
 
 int Navigator::print_usage(const char *reason)
