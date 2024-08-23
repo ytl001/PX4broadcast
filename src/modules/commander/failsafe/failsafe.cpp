@@ -60,6 +60,7 @@ FailsafeBase::ActionOptions Failsafe::fromNavDllOrRclActParam(int param_value)
 
 	case gcs_connection_loss_failsafe_mode::Land_mode:
 		options.action = Action::Land;
+		options.clear_condition = ClearCondition::OnModeChangeOrDisarm;
 		break;
 
 	case gcs_connection_loss_failsafe_mode::Terminate:
@@ -113,6 +114,7 @@ FailsafeBase::ActionOptions Failsafe::fromGfActParam(int param_value)
 
 	case geofence_violation_action::Land_mode:
 		options.action = Action::Land;
+		options.clear_condition = ClearCondition::OnModeChangeOrDisarm;
 		break;
 
 	default:
@@ -355,6 +357,7 @@ FailsafeBase::ActionOptions Failsafe::fromHighWindLimitActParam(int param_value)
 
 	case command_after_high_wind_failsafe::Land_mode:
 		options.action = Action::Land;
+		options.clear_condition = ClearCondition::OnModeChangeOrDisarm;
 		break;
 
 	default:
@@ -470,6 +473,16 @@ void Failsafe::checkStateAndMode(const hrt_abstime &time_us, const State &state,
 	if (state.user_intended_mode == vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION ||
 	    state.user_intended_mode == vehicle_status_s::NAVIGATION_STATE_AUTO_LOITER) {
 		CHECK_FAILSAFE(status_flags, local_position_accuracy_low, ActionOptions(Action::RTL));
+	}
+
+	if (state.user_intended_mode == vehicle_status_s::NAVIGATION_STATE_AUTO_TAKEOFF ||
+	    state.user_intended_mode == vehicle_status_s::NAVIGATION_STATE_AUTO_RTL) {
+		CHECK_FAILSAFE(status_flags, navigator_failure,
+			       ActionOptions(Action::Land).clearOn(ClearCondition::OnModeChangeOrDisarm));
+
+	} else {
+		CHECK_FAILSAFE(status_flags, navigator_failure,
+			       ActionOptions(Action::Hold).clearOn(ClearCondition::OnModeChangeOrDisarm));
 	}
 
 	CHECK_FAILSAFE(status_flags, geofence_breached, fromGfActParam(_param_gf_action.get()).cannotBeDeferred());
