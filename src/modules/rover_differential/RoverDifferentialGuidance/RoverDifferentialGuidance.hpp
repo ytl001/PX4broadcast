@@ -35,7 +35,8 @@
 
 // PX4 includes
 #include <px4_platform_common/module_params.h>
-#include <lib/pure_pursuit/PurePursuit.hpp>
+//#include <lib/pure_pursuit/PurePursuit.hpp>
+#include <lib/stanley_pursuit/StanleyPursuit.hpp>
 
 // uORB includes
 #include <uORB/Publication.hpp>
@@ -122,7 +123,8 @@ private:
 	// Variables
 	MapProjection _global_ned_proj_ref{}; // Transform global to ned coordinates.
 	GuidanceState _currentState{GuidanceState::DRIVING}; // The current state of guidance.
-	PurePursuit _pure_pursuit{this}; // Pure pursuit library
+	//PurePursuit _pure_pursuit{this}; // Pure pursuit library
+	StanleyPursuit _stanley_pursuit{this}; // Stanley pursuit library
 	hrt_abstime _timestamp{0};
 	float _max_yaw_rate{0.f};
 

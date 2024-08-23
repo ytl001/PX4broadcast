@@ -112,7 +112,8 @@ RoverDifferentialGuidance::differential_setpoint RoverDifferentialGuidance::comp
 		_home_position = Vector2d(home_position.lat, home_position.lon);
 	}
 
-	const float desired_heading = _pure_pursuit.calcDesiredHeading(_curr_wp_ned, _prev_wp_ned, _curr_pos_ned,
+	//const float desired_heading = _pure_pursuit.calcDesiredHeading(_curr_wp_ned, _prev_wp_ned, _curr_pos_ned,
+	const float desired_heading = _stanley_pursuit.calcDesiredHeading(_curr_wp_ned, _prev_wp_ned, _curr_pos_ned,
 				      math::max(actual_speed, 0.f));
 
 	const float heading_error = matrix::wrap_pi(desired_heading - yaw);
@@ -195,7 +196,7 @@ RoverDifferentialGuidance::differential_setpoint RoverDifferentialGuidance::comp
 	_rover_differential_guidance_status.timestamp = _timestamp;
 	_rover_differential_guidance_status.desired_speed = desired_speed;
 	_rover_differential_guidance_status.pid_throttle_integral = _pid_throttle.integral;
-	_rover_differential_guidance_status.lookahead_distance = _pure_pursuit.getLookaheadDistance();
+	_rover_differential_guidance_status.lookahead_distance = NAN; // _pure_pursuit.getLookaheadDistance();
 	_rover_differential_guidance_status.pid_heading_integral = _pid_heading.integral;
 	_rover_differential_guidance_status.heading_error_deg = M_RAD_TO_DEG_F * heading_error;
 	_rover_differential_guidance_status.state_machine = (uint8_t) _currentState;
