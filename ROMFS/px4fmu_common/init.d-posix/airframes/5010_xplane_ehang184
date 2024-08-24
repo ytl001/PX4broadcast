@@ -59,6 +59,7 @@ param set-default CA_ROTOR3_PX -1.4
 param set-default CA_ROTOR3_PY 1.4
 param set-default CA_ROTOR3_PZ 0
 
+param set-default EKF2_ABL_TAU 1 
 param set-default CP_DELAY 0.4
 param set-default CP_DIST -1
 param set-default CP_GO_NO_DATA 0
