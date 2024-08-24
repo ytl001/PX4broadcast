@@ -181,6 +181,7 @@ EKF2::EKF2(bool multi_mode, const px4::wq_config_t &config, bool replay_mode):
 #endif // CONFIG_EKF2_EXTERNAL_VISION
 #if defined(CONFIG_EKF2_OPTICAL_FLOW)
 	_param_ekf2_of_ctrl(_params->flow_ctrl),
+	_param_ekf2_of_gyr_src(_params->flow_gyro_src),
 	_param_ekf2_of_delay(_params->flow_delay_ms),
 	_param_ekf2_of_n_min(_params->flow_noise),
 	_param_ekf2_of_n_max(_params->flow_noise_qual_min),
@@ -2075,14 +2076,19 @@ void EKF2::UpdateAirspeedSample(ekf2_timestamps_s &ekf2_timestamps)
 		if (_airspeed_validated_sub.update(&airspeed_validated)) {
 
 			if (PX4_ISFINITE(airspeed_validated.true_airspeed_m_s)
-			    && PX4_ISFINITE(airspeed_validated.calibrated_airspeed_m_s)
-			    && (airspeed_validated.calibrated_airspeed_m_s > 0.f)
 			    && (airspeed_validated.selected_airspeed_index > 0)
 			   ) {
+				float cas2tas = 1.f;
+
+				if (PX4_ISFINITE(airspeed_validated.calibrated_airspeed_m_s)
+				    && (airspeed_validated.calibrated_airspeed_m_s > FLT_EPSILON)) {
+					cas2tas = airspeed_validated.true_airspeed_m_s / airspeed_validated.calibrated_airspeed_m_s;
+				}
+
 				airspeedSample airspeed_sample {
 					.time_us = airspeed_validated.timestamp,
 					.true_airspeed = airspeed_validated.true_airspeed_m_s,
-					.eas2tas = airspeed_validated.true_airspeed_m_s / airspeed_validated.calibrated_airspeed_m_s,
+					.eas2tas = cas2tas,
 				};
 				_ekf.setAirspeedData(airspeed_sample);
 			}
