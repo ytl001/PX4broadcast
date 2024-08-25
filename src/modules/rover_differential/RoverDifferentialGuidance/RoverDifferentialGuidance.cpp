@@ -149,7 +149,7 @@ RoverDifferentialGuidance::differential_setpoint RoverDifferentialGuidance::comp
 	// Guidance logic
 	switch (_currentState) {
 	case GuidanceState::DRIVING: {
-			desired_speed = _param_rd_miss_spd_def.get();
+			desired_speed = _max_leg_speed;
 
 			const float distance_to_prev_wp = get_distance_to_next_waypoint(_curr_pos(0), _curr_pos(1),
 							  _prev_wp(0),
@@ -168,6 +168,7 @@ RoverDifferentialGuidance::differential_setpoint RoverDifferentialGuidance::comp
 
 	case GuidanceState::SPOT_TURNING:
 		if (actual_speed < TURN_MAX_VELOCITY) { // Wait for the rover to stop
+			// SP=0.f and heading_error are in wrong order here?
 			desired_yaw_rate = pid_calculate(&_pid_heading, heading_error, 0.f, 0.f, dt); // Turn on the spot
 		}
 
@@ -188,14 +189,18 @@ RoverDifferentialGuidance::differential_setpoint RoverDifferentialGuidance::comp
 		pid_reset_integral(&_pid_throttle);
 
 	} else {
-		throttle = pid_calculate(&_pid_throttle, desired_speed, actual_speed, 0,
-					 dt);
+		throttle = pid_calculate(&_pid_throttle, desired_speed, actual_speed, 0, dt);
+
+		/*
+		// this code causes huge excess in actual speed (RD_MISS_SPD_DEF being a setpoint).
+		// shall we introduce RD_SPEED_FF instead, if feed-forward is needed?
 
 		if (_param_rd_max_speed.get() > FLT_EPSILON) { // Feed-forward term
 			throttle += math::interpolate<float>(desired_speed,
 							     0.f, _param_rd_max_speed.get(),
 							     0.f, 1.f);
 		}
+		*/
 	}
 
 	// Publish differential controller status (logging)
@@ -250,5 +255,13 @@ void RoverDifferentialGuidance::updateWaypoints()
 	// NED waypoint coordinates
 	_curr_wp_ned = _global_ned_proj_ref.project(_curr_wp(0), _curr_wp(1));
 	_prev_wp_ned = _global_ned_proj_ref.project(_prev_wp(0), _prev_wp(1));
+
+	if (PX4_ISFINITE(position_setpoint_triplet.current.cruising_speed)
+	    && position_setpoint_triplet.current.cruising_speed > FLT_EPSILON) {
+		_max_leg_speed = position_setpoint_triplet.current.cruising_speed;
+
+	} else {
+		_max_leg_speed = _param_rd_miss_spd_def.get();
+	}
 
 }

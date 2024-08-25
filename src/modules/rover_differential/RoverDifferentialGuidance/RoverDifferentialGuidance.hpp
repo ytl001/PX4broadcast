@@ -127,6 +127,7 @@ private:
 	StanleyPursuit _stanley_pursuit{this}; // Stanley pursuit library
 	hrt_abstime _timestamp{0};
 	float _max_yaw_rate{0.f};
+	float _max_leg_speed{0.f};
 
 
 	// Waypoints
