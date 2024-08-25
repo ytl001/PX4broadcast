@@ -48,7 +48,6 @@ void StanleyPursuit::updateParams()
 	param_get(_param_handles.softening_factor, &_params.softening_factor);
 
 	ModuleParams::updateParams();
-
 }
 
 float StanleyPursuit::calcDesiredHeading(const Vector2f &curr_wp_ned, const Vector2f &prev_wp_ned,
@@ -75,13 +74,13 @@ float StanleyPursuit::calcDesiredHeading(const Vector2f &curr_wp_ned, const Vect
 			return NAN;
 		}
 
-		float desired_heading = wrap_pi(atan2f(to_C_norm(1), to_C_norm(0)));
+		float heading_to_C = wrap_pi(atan2f(to_C_norm(1), to_C_norm(0)));
 
 		//PX4_INFO_RAW("V: %f   %f\n", (double)curr_pos_ned(0), (double)curr_pos_ned(1));
 		//PX4_INFO_RAW("to_C_norm: %f   %f\n", (double)to_C_norm(0), (double)to_C_norm(1));
-		//PX4_INFO_RAW("desired_heading V to C: %f   %f\n", (double)desired_heading, (double)math::degrees(desired_heading));
+		PX4_INFO_RAW("heading_to_C V to C: %f   %f\n", (double)heading_to_C, (double)math::degrees(heading_to_C));
 
-		return desired_heading;
+		return heading_to_C;
 	}
 
 	// Stanley pursuit calculations:
@@ -93,12 +92,13 @@ float StanleyPursuit::calcDesiredHeading(const Vector2f &curr_wp_ned, const Vect
 	float crosstrack_error = P_to_C_norm %
 				 P_to_V;   // "crosstrack" distance from Vehicle to the desired P--C trajectory, meters.
 
-	float desired_heading = wrap_pi(atan2f(P_to_C(1), P_to_C(0)));	// angle to North vector (X axis)
+	float parallel_heading = wrap_pi(atan2f(P_to_C(1), P_to_C(0)));	// angle to North vector (X axis)
+
+	//float bearing_to_C = wrap_pi(atan2f(to_C_norm(1), to_C_norm(0)));
 
 	/* ==========================================
 
-	float bearing_to_C = wrap_pi(atan2f(to_C_norm(1), to_C_norm(0)));
-	float diff = wrap_pi(desired_heading - bearing_to_C);
+	float diff = wrap_pi(parallel_heading - bearing_to_C);
 
 	if (abs(diff) > M_PI_4_F) {
 		PX4_WARN("Stanley: cannot reach target waypoint - bearing %f deg", (double)math::degrees(bearing_to_C));
@@ -110,10 +110,15 @@ float StanleyPursuit::calcDesiredHeading(const Vector2f &curr_wp_ned, const Vect
 	float xtrack_factor = -atanf(_params.xtrack_gain * crosstrack_error / (_params.softening_factor + math::max(
 					     vehicle_speed, 0.0f)));
 
+
 	//PX4_INFO_RAW("H: %.2f deg   X: %.1f cm  speed: %.3f   XF: %f rad  %f deg  to_C: %f deg\n",
-	//	     (double)math::degrees(desired_heading),
+	//	     (double)math::degrees(parallel_heading),
 	//	     (double)(crosstrack_error * 100.0f), (double)vehicle_speed, (double)xtrack_factor,
 	//	     (double)math::degrees(xtrack_factor), (double)math::degrees(bearing_to_C));
 
-	return desired_heading + xtrack_factor;
+	float desired_heading = wrap_pi(parallel_heading + xtrack_factor);
+
+	//PX4_INFO_RAW("desired_heading: %.2f deg\n", (double)math::degrees(desired_heading));
+
+	return desired_heading;
 }

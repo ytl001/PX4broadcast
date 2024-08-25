@@ -151,9 +151,15 @@ RoverDifferentialGuidance::differential_setpoint RoverDifferentialGuidance::comp
 	case GuidanceState::DRIVING: {
 			desired_speed = _param_rd_miss_spd_def.get();
 
+			const float distance_to_prev_wp = get_distance_to_next_waypoint(_curr_pos(0), _curr_pos(1),
+							  _prev_wp(0),
+							  _prev_wp(1));
+
+			const float braking_distance = math::min(distance_to_prev_wp, distance_to_next_wp);
+
 			if (_param_rd_max_jerk.get() > FLT_EPSILON && _param_rd_max_accel.get() > FLT_EPSILON) {
 				desired_speed = math::trajectory::computeMaxSpeedFromDistance(_param_rd_max_jerk.get(),
-						_param_rd_max_accel.get(), distance_to_next_wp, 0.0f);
+						_param_rd_max_accel.get(), braking_distance, 0.0f);
 				desired_speed = math::constrain(desired_speed, -_param_rd_max_speed.get(), _param_rd_max_speed.get());
 			}
 

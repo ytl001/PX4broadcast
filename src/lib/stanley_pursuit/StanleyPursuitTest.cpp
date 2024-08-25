@@ -78,6 +78,7 @@ public:
 	StanleyPursuit stanley_pursuit{nullptr};
 };
 
+//#ifdef QQQ
 TEST_F(StanleyPursuitTest, InvalidSpeed)
 {
 	//      V   C
@@ -118,6 +119,32 @@ TEST_F(StanleyPursuitTest, InvalidWaypoints)
 	EXPECT_FALSE(PX4_ISFINITE(desired_heading2));
 	EXPECT_FALSE(PX4_ISFINITE(desired_heading3));
 }
+
+/*
+TEST_F(StanleyPursuitTest, OutOfLookahead)
+{
+	const float vehicle_speed{5.f};
+	//	V   C
+	//         /
+	//  	  /
+	//	 /
+	//	P
+	const float desired_heading1 = stanley_pursuit.calcDesiredHeading(Vector2f(10.f, 10.f), Vector2f(0.f, 0.f),
+				       Vector2f(10.f,
+						0.f),
+				       vehicle_speed);
+	//	    V
+	//
+	//	P ----- C
+	const float desired_heading2 = stanley_pursuit.calcDesiredHeading(Vector2f(0.f, 20.f), Vector2f(0.f, 0.f),
+				       Vector2f(10.f,
+						10.f),
+				       vehicle_speed);
+	EXPECT_NEAR(desired_heading1, M_PI_2_F + M_PI_4_F, FLT_EPSILON); // Fallback: Bearing to closest point on path
+	EXPECT_NEAR(desired_heading2, M_PI_F, FLT_EPSILON); 		 // Fallback: Bearing to closest point on path
+}
+*/
+//#endif // QQQ
 
 TEST_F(StanleyPursuitTest, WaypointOverlap)
 {
@@ -224,8 +251,70 @@ TEST_F(StanleyPursuitTest, CourseContributionDueToCrosstrack)
 	//	     V       10 cm crosstrack
 	const float desired_heading2 = stanley_pursuit.calcDesiredHeading(Vector2f(0.f, 20.f), Vector2f(0.f, 0.f),
 				       Vector2f(-0.1f, 10.f), vehicle_speed);
+	//	     C
+	//       V  /
+	//         /
+	//	  P
+	const float desired_heading3 = stanley_pursuit.calcDesiredHeading(Vector2f(20.f, 20.f), Vector2f(0.f, 0.f),
+				       Vector2f(11.0f, 9.0f), vehicle_speed);
+	//	     C
+	//          /
+	//         /  V
+	//	  P
+	const float desired_heading4 = stanley_pursuit.calcDesiredHeading(Vector2f(20.f, 20.f), Vector2f(0.f, 0.f),
+				       Vector2f(9.0f, 11.0f), vehicle_speed);
+	// V         C
+	// (far)    /
+	//         /
+	//	  P
+	const float desired_heading5 = stanley_pursuit.calcDesiredHeading(Vector2f(20.f, 20.f), Vector2f(0.f, 0.f),
+				       Vector2f(20.0f, 0.0f), vehicle_speed);
+	//           C
+	//          /
+	//         /
+	//	  P        V (far)
+	const float desired_heading6 = stanley_pursuit.calcDesiredHeading(Vector2f(20.f, 20.f), Vector2f(0.f, 0.f),
+				       Vector2f(0.0f, 20.0f), vehicle_speed);
 
 	// expect the heading to lean about 5 degrees towards the C:
 	EXPECT_NEAR(desired_heading1, M_PI_2_F + 0.09f, 0.001f);
 	EXPECT_NEAR(desired_heading2, M_PI_2_F - 0.09f, 0.001f);
+	EXPECT_NEAR(desired_heading3, M_PI_2_F + 0.13f, 0.01f);		// 97 degrees
+	EXPECT_NEAR(desired_heading4, -0.13f, 0.01f);			// -7 degrees
+	EXPECT_NEAR(desired_heading5, M_PI_4_F * 3.0f - 0.08f, 0.01f);	// 130 degrees
+	EXPECT_NEAR(desired_heading6, -M_PI_4_F + 0.08f, 0.01f);	// -40 degrees
 }
+
+#ifdef QQQ
+TEST_F(StanleyPursuitTest, CurrAndPrevSameNorthCoordinate)
+{
+	const float vehicle_speed{5.f};
+	//	P -- V -- C
+	const float desired_heading1 = stanley_pursuit.calcDesiredHeading(Vector2f(0.f, 20.f), Vector2f(0.f, 0.f), Vector2f(0.f,
+				       10.f),
+				       vehicle_speed);
+
+	//	     V
+	//	P ------ C
+	const float desired_heading2 = stanley_pursuit.calcDesiredHeading(Vector2f(0.f, 20.f), Vector2f(0.f, 0.f),
+				       Vector2f(5.f / sqrtf(2.f), 10.f),
+				       vehicle_speed);
+	//	     V
+	//	C ------ P
+	const float desired_heading3 = stanley_pursuit.calcDesiredHeading(Vector2f(0.f, 0.f), Vector2f(0.f, 20.f),
+				       Vector2f(5.f / sqrtf(2.f), 10.f),
+				       vehicle_speed);
+	//	     V
+	//
+	//	P ------ C
+	const float desired_heading4 = stanley_pursuit.calcDesiredHeading(Vector2f(0.f, 20.f), Vector2f(0.f, 0.f),
+				       Vector2f(10.f,
+						10.f),
+				       vehicle_speed);
+
+	EXPECT_NEAR(desired_heading1, M_PI_2_F, FLT_EPSILON);
+	EXPECT_NEAR(desired_heading2, M_PI_2_F + M_PI_4_F, FLT_EPSILON);
+	EXPECT_NEAR(desired_heading3, -(M_PI_2_F + M_PI_4_F), FLT_EPSILON);
+	EXPECT_NEAR(desired_heading4, M_PI_F, FLT_EPSILON); // Fallback: Bearing to closest point on path
+}
+#endif // QQQ
