@@ -1,6 +1,6 @@
 ############################################################################
 #
-#   Copyright (c) 2023-2024 PX4 Development Team. All rights reserved.
+#   Copyright (c) 2024 PX4 Development Team. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -31,20 +31,10 @@
 #
 ############################################################################
 
-add_subdirectory(RoverDifferentialGuidance)
-
-px4_add_module(
-	MODULE modules__rover_differential
-	MAIN rover_differential
-	SRCS
-		RoverDifferential.cpp
-		RoverDifferential.hpp
-	DEPENDS
-		RoverDifferentialGuidance
-		px4_work_queue
-		modules__control_allocator # for parameter CA_R_REV
-		pure_pursuit
-		stanley_pursuit
-	MODULE_CONFIG
-		module.yaml
+px4_add_library(stanley_pursuit
+	StanleyPursuit.cpp
+	StanleyPursuit.hpp
 )
+
+px4_add_functional_gtest(SRC StanleyPursuitTest.cpp LINKLIBS stanley_pursuit)
+set_property(GLOBAL APPEND PROPERTY PX4_MODULE_CONFIG_FILES ${CMAKE_CURRENT_SOURCE_DIR}/module.yaml)
