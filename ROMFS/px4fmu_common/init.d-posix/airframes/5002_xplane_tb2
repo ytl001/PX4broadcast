@@ -23,6 +23,10 @@ param set-default CA_AIRFRAME 1
 param set-default CA_ROTOR_COUNT 1
 param set-default CA_SV_CS_COUNT 7
 
+
+param set-default EKF2_ABL_TAU 1
+param set-default EKF2_ABL_LIM 0.8
+
 # --- Control Surface Configuration ---
 param set-default CA_SV_CS0_TYPE 1     # Left aileron
 param set-default CA_SV_CS0_TRQ_R -0.5
