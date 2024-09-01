@@ -250,6 +250,8 @@ param set-default MIS_YAW_ERR 15.0000
 param set-default NAV_ACC_RAD 300.0000
 param set-default NAV_FW_ALT_RAD 50.0000
 param set-default NAV_MIN_LTR_ALT -1.0000
+param set-default EKF2_BARO_CTRL 0
+param set-default NAV_MC_ALT_RAD 2.0000
 
 
 param set-default EKF2_ABL_TAU 1
