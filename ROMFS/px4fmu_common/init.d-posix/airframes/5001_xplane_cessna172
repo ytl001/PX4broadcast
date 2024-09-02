@@ -19,9 +19,9 @@
 # Load default configuration for fixed-wing aircraft
 . ${R}etc/init.d/rc.fw_defaults
 
-param set-default EKF2_ABL_TAU 1
-param set-default EKF2_ABL_LIM 0.8
-param set-default EKF2_BARO_CTRL 0
+param set-default EKF2_ABL_TAU 0.3
+param set-default EKF2_ABL_LIM 2
+param set-default EKF2_BARO_CTRL 1
 
 
 
@@ -70,6 +70,7 @@ param set-default FW_R_LIM 30.0000
 param set-default LNDFW_VEL_XY_MAX 15.0000
 param set-default FW_LND_FLALT  5.0000
 param set-default RTL_LOITER_RAD 1000.0000
+param set-default RTL_DESCEND_ALT 200.0000
 param set-default FW_LND_FL_PMAX 35.0000
 
 # ---- PWM Reversals ----
@@ -127,9 +128,12 @@ param set-default FW_T_RLL2THR 5.0000
 param set-default FW_T_STE_R_TC 2.5000
 param set-default FW_T_THR_DAMP 0.0000
 param set-default LNDFW_AIRSPD_MAX 30.0000
-param set-default MIS_YAW_ERR 15.0000
+param set-default MIS_YAW_ERR 30.0000
+param set-default MIS_YAW_TMT 5.0000
+
 param set-default NAV_ACC_RAD 300.0000
 param set-default NAV_FW_ALT_RAD 50.0000
+param set-default MPC_MAN_Y_MAX 20.0000
 param set-default NAV_MIN_LTR_ALT -1.0000
 
 param set-default EKF2_MAG_TYPE 0

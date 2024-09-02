@@ -250,14 +250,16 @@ param set-default MIS_YAW_ERR 15.0000
 param set-default NAV_ACC_RAD 300.0000
 param set-default NAV_FW_ALT_RAD 50.0000
 param set-default NAV_MIN_LTR_ALT -1.0000
-param set-default EKF2_BARO_CTRL 0
+param set-default EKF2_BARO_CTRL 1
 param set-default NAV_MC_ALT_RAD 2.0000
 
+param set-default MIS_YAW_TMT 5.0000
+param set-default MIS_YAW_ERR 20.0000
 
-param set-default EKF2_ABL_TAU 1
-param set-default EKF2_ABL_LIM 0.8
+param set-default EKF2_ABL_TAU 0.3
+param set-default EKF2_ABL_LIM 2
 
-param set-default EKF2_MAG_TYPE 0param
+param set-default EKF2_MAG_TYPE 0
 param set-default FW_LND_AIRSPD 0
 param set-default FW_PR_D 0.3550
 param set-default FW_RR_D 0.0850

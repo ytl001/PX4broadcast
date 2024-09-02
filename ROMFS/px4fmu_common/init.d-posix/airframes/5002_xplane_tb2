@@ -24,9 +24,9 @@ param set-default CA_ROTOR_COUNT 1
 param set-default CA_SV_CS_COUNT 7
 
 
-param set-default EKF2_ABL_TAU 1
-param set-default EKF2_ABL_LIM 0.8
-param set-default EKF2_BARO_CTRL 0
+param set-default EKF2_ABL_TAU 0.3
+param set-default EKF2_ABL_LIM 2
+param set-default EKF2_BARO_CTRL 1
 
 
 # --- Control Surface Configuration ---

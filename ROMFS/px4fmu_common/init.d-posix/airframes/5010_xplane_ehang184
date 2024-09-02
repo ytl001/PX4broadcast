@@ -59,9 +59,9 @@ param set-default CA_ROTOR3_PX -1.4
 param set-default CA_ROTOR3_PY 1.4
 param set-default CA_ROTOR3_PZ 0
 
-param set-default EKF2_ABL_TAU 1
-param set-default EKF2_ABL_LIM 0.8
-param set-default EKF2_BARO_CTRL 0
+param set-default EKF2_ABL_TAU 0.3
+param set-default EKF2_ABL_LIM 2
+param set-default EKF2_BARO_CTRL 1
 param set-default CP_DELAY 0.4
 param set-default CP_DIST -1
 param set-default CP_GO_NO_DATA 0
@@ -164,8 +164,8 @@ param set-default MPC_Z_VEL_I_ACC 2
 param set-default MPC_Z_VEL_MAX_DN 1.5
 param set-default MPC_Z_VEL_MAX_UP 3
 param set-default MPC_Z_VEL_P_ACC 3
-param set-default NAV_ACC_RAD 2
-param set-default RTL_DESCEND_ALT 10
+param set-default NAV_ACC_RAD 20
+param set-default RTL_DESCEND_ALT 30
 param set-default RTL_RETURN_ALT 30
 param set-default SYS_VEHICLE_RESP -0.4
 param set-default WV_EN 0
@@ -184,9 +184,12 @@ param set-default MPC_HOLD_DZ 0.3
 param set-default MPC_JERK_AUTO 1
 param set-default MPC_JERK_MAX 3
 param set-default MPC_LAND_RC_HELP 1
-param set-default MPC_MAN_Y_MAX 30
+param set-default MPC_MAN_Y_MAX 20
 param set-default MPC_XY_CRUISE 10
 param set-default MPC_YAWRAUTO_ACC 20
 param set-default MPC_YAWRAUTO_MAX 30
+param set-default MIS_YAW_ERR 20.0000
+param set-default MIS_YAW_TMT 5.0000
+
 
 param set-default NAV_MC_ALT_RAD 2.0000
