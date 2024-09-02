@@ -184,7 +184,7 @@ param set-default FW_RR_FF 1
 param set-default FW_R_LIM 30.0000
 param set-default LNDFW_VEL_XY_MAX 15.0000
 param set-default FW_LND_FLALT  5.0000
-param set-default RTL_LOITER_RAD 1000.0000
+param set-default RTL_LOITER_RAD 1500.0000
 param set-default FW_LND_FL_PMAX 35.0000
 
 
@@ -226,7 +226,7 @@ param set-default VT_ELEV_MC_LOCK 0
 param set-default VT_FWD_THRUST_EN 0
 param set-default VT_F_TRANS_DUR 30.0000
 param set-default VT_QC_T_ALT_LOSS 100.0000
-param set-default VTO_LOITER_ALT 1000.0000
+param set-default VTO_LOITER_ALT 1500.0000
 param set-default VT_TRANS_MIN_TM 8.0000
 param set-default VT_TRANS_TIMEOUT 60.0000
 param set-default VT_TYPE 2
@@ -271,7 +271,7 @@ param set-default FW_WING_SPAN 17.0000
 param set-default MIS_DIST_1WP 5000.0000
 param set-default MIS_TAKEOFF_ALT 100.0000
 param set-default MIS_TKO_LAND_REQ 0
-param set-default NAV_LOITER_RAD 1000.0000
+param set-default NAV_LOITER_RAD 1500.0000
 param set-default RTL_MIN_DIST 50.0000
 param set-default WEIGHT_BASE 3100.0000
 param set-default WEIGHT_GROSS 3500.0000
