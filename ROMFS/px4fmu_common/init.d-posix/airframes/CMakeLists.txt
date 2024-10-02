@@ -85,6 +85,8 @@ px4_add_romfs_files(
 	4011_gz_lawnmower
 	4012_gz_rover_ackermann
 	4013_gz_x500_lidar
+	4014_gz_x500_mono_cam_down
+	4015_gz_r1_rover_mecanum
 
 	5001_xplane_cessna172
 	5002_xplane_tb2

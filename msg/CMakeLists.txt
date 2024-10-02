@@ -73,6 +73,7 @@ set(msg_files
 	DebugVect.msg
 	DifferentialPressure.msg
 	DistanceSensor.msg
+	DistanceSensorModeChangeRequest.msg
 	Ekf2Timestamps.msg
 	EscReport.msg
 	EscStatus.msg
@@ -152,6 +153,10 @@ set(msg_files
 	ObstacleDistance.msg
 	OffboardControlMode.msg
 	OnboardComputerStatus.msg
+	OpenDroneIdArmStatus.msg
+	OpenDroneIdOperatorId.msg
+	OpenDroneIdSelfId.msg
+	OpenDroneIdSystem.msg
 	OrbitStatus.msg
 	OrbTest.msg
 	OrbTestLarge.msg
@@ -182,7 +187,11 @@ set(msg_files
 	RoverAckermannGuidanceStatus.msg
 	RoverAckermannStatus.msg
 	RoverDifferentialGuidanceStatus.msg
+	RoverDifferentialSetpoint.msg
 	RoverDifferentialStatus.msg
+	RoverMecanumGuidanceStatus.msg
+	RoverMecanumSetpoint.msg
+	RoverMecanumStatus.msg
 	Rpm.msg
 	RtlStatus.msg
 	RtlTimeEstimate.msg
