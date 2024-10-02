@@ -61,10 +61,6 @@ param set-default FD_FAIL_R 70           # Fail-safe return altitude
 param set-default FW_P_TC 0.2            # Pitch time constant, lower for more responsive control
 param set-default NPFG_PERIOD 8          # Path following period, adjusted for higher speeds
 
-# Fixed-wing attitude control gains (adjusted for control via differential thrust)
-param set-default FW_R_P 3.0             # Roll angle P gain
-param set-default FW_P_P 3.0             # Pitch angle P gain
-param set-default FW_Y_P 1.5             # Yaw angle P gain
 
 # Fixed-wing rate control gains
 param set-default FW_RR_P 0.1            # Roll rate P gain
