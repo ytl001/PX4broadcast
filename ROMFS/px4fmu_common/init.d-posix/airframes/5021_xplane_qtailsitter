@@ -107,3 +107,12 @@ param set-default VT_FW_DIFTHR_S_R 1.0   # Differential thrust scaling for roll
 param set-default VT_FW_DIFTHR_S_P 1.0   # Differential thrust scaling for pitch
 param set-default VT_FW_DIFTHR_S_Y 1.0   # Differential thrust scaling for yaw
 param set-default VT_TYPE 0              # Tailsitter type
+
+
+param set-default EKF2_TAS_GATE 3
+param set-default EKF2_WIND_NSD 0.01
+
+param set-default EKF2_ABL_TAU 0.3
+param set-default EKF2_ABL_LIM 2
+param set-default EKF2_MAG_TYPE 0
+
