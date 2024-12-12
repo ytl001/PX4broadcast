@@ -41,7 +41,6 @@ RoverDifferentialGuidance::RoverDifferentialGuidance(ModuleParams *parent) : Mod
 {
 	updateParams();
 	_max_forward_speed = _param_rd_max_speed.get();
-	_rover_differential_guidance_status_pub.advertise();
 }
 
 void RoverDifferentialGuidance::updateParams()
@@ -62,7 +61,7 @@ void RoverDifferentialGuidance::computeGuidance(const float vehicle_yaw, const f
 	}
 
 	// State machine
-	float desired_yaw = _pure_pursuit.calcDesiredHeading(_curr_wp_ned, _prev_wp_ned, _curr_pos_ned,
+	float desired_yaw = _pure_pursuit.updatePurePursuit(_curr_wp_ned, _prev_wp_ned, _curr_pos_ned,
 			    math::max(forward_speed, 0.f));
 	const float heading_error = matrix::wrap_pi(desired_yaw - vehicle_yaw);
 
@@ -125,18 +124,9 @@ void RoverDifferentialGuidance::computeGuidance(const float vehicle_yaw, const f
 
 	}
 
-	// Publish differential guidance status (logging)
-	hrt_abstime timestamp = hrt_absolute_time();
-	rover_differential_guidance_status_s rover_differential_guidance_status{};
-	rover_differential_guidance_status.timestamp = timestamp;
-	rover_differential_guidance_status.lookahead_distance = _pure_pursuit.getLookaheadDistance();
-	rover_differential_guidance_status.heading_error_deg = M_RAD_TO_DEG_F * heading_error;
-	rover_differential_guidance_status.state_machine = (uint8_t) _currentState;
-	_rover_differential_guidance_status_pub.publish(rover_differential_guidance_status);
-
 	// Publish setpoints
 	rover_differential_setpoint_s rover_differential_setpoint{};
-	rover_differential_setpoint.timestamp = timestamp;
+	rover_differential_setpoint.timestamp = hrt_absolute_time();
 	rover_differential_setpoint.forward_speed_setpoint = desired_forward_speed;
 	rover_differential_setpoint.forward_speed_setpoint_normalized = NAN;
 	rover_differential_setpoint.yaw_rate_setpoint = NAN;
@@ -193,7 +183,7 @@ void RoverDifferentialGuidance::updateWaypoints()
 		_curr_wp = Vector2d(position_setpoint_triplet.current.lat, position_setpoint_triplet.current.lon);
 
 	} else {
-		_curr_wp = Vector2d(0, 0);
+		_curr_wp = _curr_pos;
 	}
 
 	if (position_setpoint_triplet.previous.valid && PX4_ISFINITE(position_setpoint_triplet.previous.lat)

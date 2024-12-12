@@ -42,7 +42,6 @@ RoverMecanumGuidance::RoverMecanumGuidance(ModuleParams *parent) : ModuleParams(
 {
 	updateParams();
 	_max_velocity_magnitude = _param_rm_max_speed.get();
-	_rover_mecanum_guidance_status_pub.advertise();
 }
 
 void RoverMecanumGuidance::updateParams()
@@ -72,7 +71,7 @@ void RoverMecanumGuidance::computeGuidance(const float yaw, const int nav_state)
 
 
 	// Calculate heading error
-	const float desired_heading = _pure_pursuit.calcDesiredHeading(_curr_wp_ned, _prev_wp_ned, _curr_pos_ned,
+	const float desired_heading = _pure_pursuit.updatePurePursuit(_curr_wp_ned, _prev_wp_ned, _curr_pos_ned,
 				      desired_velocity_magnitude);
 	const float heading_error = matrix::wrap_pi(desired_heading - yaw);
 
@@ -91,20 +90,9 @@ void RoverMecanumGuidance::computeGuidance(const float yaw, const int nav_state)
 		desired_velocity = desired_velocity_magnitude * Vector2f(cosf(heading_error), sinf(heading_error));
 	}
 
-	// Timestamp
-	hrt_abstime timestamp = hrt_absolute_time();
-
-	// Publish mecanum controller status (logging)
-	rover_mecanum_guidance_status_s rover_mecanum_guidance_status{};
-	rover_mecanum_guidance_status.timestamp = timestamp;
-	rover_mecanum_guidance_status.lookahead_distance = _pure_pursuit.getLookaheadDistance();
-	rover_mecanum_guidance_status.heading_error = heading_error;
-	rover_mecanum_guidance_status.desired_speed = desired_velocity_magnitude;
-	_rover_mecanum_guidance_status_pub.publish(rover_mecanum_guidance_status);
-
 	// Publish setpoints
 	rover_mecanum_setpoint_s rover_mecanum_setpoint{};
-	rover_mecanum_setpoint.timestamp = timestamp;
+	rover_mecanum_setpoint.timestamp = hrt_absolute_time();;
 	rover_mecanum_setpoint.forward_speed_setpoint = desired_velocity(0);
 	rover_mecanum_setpoint.forward_speed_setpoint_normalized = NAN;
 	rover_mecanum_setpoint.lateral_speed_setpoint = desired_velocity(1);
@@ -163,7 +151,7 @@ void RoverMecanumGuidance::updateWaypoints()
 		_curr_wp = Vector2d(position_setpoint_triplet.current.lat, position_setpoint_triplet.current.lon);
 
 	} else {
-		_curr_wp = Vector2d(0, 0);
+		_curr_wp = _curr_pos;
 	}
 
 	if (position_setpoint_triplet.previous.valid && PX4_ISFINITE(position_setpoint_triplet.previous.lat)

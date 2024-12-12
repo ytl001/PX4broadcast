@@ -173,6 +173,7 @@ set(msg_files
 	PowerButtonState.msg
 	PowerMonitor.msg
 	PpsCapture.msg
+	PurePursuit.msg
 	PwmInput.msg
 	Px4ioStatus.msg
 	QshellReq.msg
@@ -183,13 +184,10 @@ set(msg_files
 	RcParameterMap.msg
 	RegisterExtComponentReply.msg
 	RegisterExtComponentRequest.msg
-	RoverAckermannGuidanceStatus.msg
 	RoverAckermannSetpoint.msg
 	RoverAckermannStatus.msg
-	RoverDifferentialGuidanceStatus.msg
 	RoverDifferentialSetpoint.msg
 	RoverDifferentialStatus.msg
-	RoverMecanumGuidanceStatus.msg
 	RoverMecanumSetpoint.msg
 	RoverMecanumStatus.msg
 	Rpm.msg
