@@ -81,10 +81,10 @@ void SensorRangeFinder::updateValidity(uint64_t current_time_us)
 
 		} else if (current_time_us - _time_bad_quality_us > _quality_hyst_us) {
 			// We did not receive bad quality data for some time
+			updateFogCheck(_sample.rng, _sample.time_us);
 
 			if (isTiltOk() && isDataInRange()) {
 				updateStuckCheck();
-				updateFogCheck(getDistBottom(), _sample.time_us);
 
 				if (!_is_stuck && !_is_blocked) {
 					_is_sample_valid = true;
@@ -162,6 +162,9 @@ void SensorRangeFinder::updateFogCheck(const float dist_bottom, const uint64_t t
 		}
 
 		_prev_median_dist = median_dist;
+
+	} else {
+		_prev_median_dist = dist_bottom;
 	}
 }
 
