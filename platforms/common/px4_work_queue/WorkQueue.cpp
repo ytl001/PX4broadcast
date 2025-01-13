@@ -33,6 +33,7 @@
 
 #include <px4_platform_common/px4_work_queue/WorkQueue.hpp>
 #include <px4_platform_common/px4_work_queue/WorkItem.hpp>
+#include <px4_platform_common/px4_work_queue/WorkQueueManager.hpp>
 
 #include <string.h>
 
@@ -40,10 +41,13 @@
 #include <px4_platform_common/tasks.h>
 #include <px4_platform_common/time.h>
 #include <drivers/drv_hrt.h>
+#include <px4_platform_common/tracer.h>
+
 
 namespace px4
 {
 
+static thread_local const wq_config_t *_thread_config = nullptr;
 WorkQueue::WorkQueue(const wq_config_t &config) :
 	_config(config)
 {
@@ -153,12 +157,55 @@ void WorkQueue::SignalWorkerThread()
 	}
 }
 
+
+void WorkQueue::Deinit(WorkItem *item)
+{
+
+	if (_thread_config == &this->_config) {
+
+		this->Remove(item);
+		this->Detach(item);
+
+	} else {
+		work_lock();
+
+		if (_current_work_item != item) {
+			_q.remove(item);
+			work_unlock();
+			this->Detach(item);
+			return;
+		}
+
+		/*
+			 Only tricky bit:
+			 Calling DeInit() from another thread and the target workitem is currently being ran
+			 We wait until it's not being ran
+			 */
+		while (true) {
+			work_unlock();
+			px4_usleep(10);
+			work_lock();
+
+			if (_current_work_item  != item) { break; }
+		}
+
+		_q.remove(item);
+		work_unlock();
+		this->Detach(item);
+
+	}
+
+}
+
 void WorkQueue::Remove(WorkItem *item)
 {
 	work_lock();
+	// Only allow queue removal from running thread
+	// Otherwise concurrency issues run amock
 	_q.remove(item);
 	work_unlock();
 }
+
 
 void WorkQueue::Clear()
 {
@@ -173,6 +220,8 @@ void WorkQueue::Clear()
 
 void WorkQueue::Run()
 {
+	_thread_config = &this->_config;
+
 	while (!should_exit()) {
 		// loop as the wait may be interrupted by a signal
 		do {} while (px4_sem_wait(&_process_lock) != 0);
@@ -183,11 +232,13 @@ void WorkQueue::Run()
 		while (!_q.empty()) {
 			WorkItem *work = _q.pop();
 
+			_current_work_item = work;
 			work_unlock(); // unlock work queue to run (item may requeue itself)
 			work->RunPreamble();
 			work->Run();
 			// Note: after Run() we cannot access work anymore, as it might have been deleted
 			work_lock(); // re-lock
+			_current_work_item = nullptr;
 		}
 
 #if defined(ENABLE_LOCKSTEP_SCHEDULER)
@@ -207,6 +258,7 @@ void WorkQueue::Run()
 
 void WorkQueue::print_status(bool last)
 {
+	work_lock();
 	const size_t num_items = _work_items.size();
 	PX4_INFO_RAW("%-16s\n", get_name());
 	unsigned i = 0;
@@ -230,6 +282,8 @@ void WorkQueue::print_status(bool last)
 
 		item->print_run_status();
 	}
+
+	work_unlock();
 }
 
 } // namespace px4

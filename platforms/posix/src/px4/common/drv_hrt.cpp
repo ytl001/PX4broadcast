@@ -44,6 +44,7 @@
 #include <px4_platform_common/workqueue.h>
 #include <px4_platform_common/tasks.h>
 #include <drivers/drv_hrt.h>
+#include <csignal>
 
 #include <semaphore.h>
 #include <time.h>
@@ -83,6 +84,7 @@ __EXPORT uint32_t latency_counters[LATENCY_BUCKET_COUNT + 1];
 
 static px4_sem_t 	_hrt_lock;
 static struct work_s	_hrt_work;
+static bool _hrt_enable = false;
 
 static void hrt_latency_update();
 
@@ -228,7 +230,15 @@ void	hrt_init()
 	}
 
 	memset(&_hrt_work, 0, sizeof(_hrt_work));
+	_hrt_enable = true;
 }
+
+void	hrt_fini()
+{
+	_hrt_enable = false;
+
+}
+
 
 static void
 hrt_call_enter(struct hrt_call *entry)
@@ -328,7 +338,13 @@ hrt_call_reschedule()
 	// Remove the existing expiry and update with the new expiry
 	hrt_work_cancel(&_hrt_work);
 
-	hrt_work_queue(&_hrt_work, &hrt_tim_isr, nullptr, delay);
+	if (_hrt_enable  || next != nullptr) {
+		hrt_work_queue(&_hrt_work, &hrt_tim_isr, nullptr, delay);
+
+	} else {
+		PX4_INFO("not rescheduling hrt since disable requested");
+
+	}
 }
 
 static void
@@ -543,4 +559,20 @@ void px4_lockstep_wait_for_components()
 {
 	lockstep_scheduler.components().wait_for_components();
 }
+
+void px4_lockstep_notify_startup()
+{
+	lockstep_scheduler.notify_startup();
+}
+
+void px4_lockstep_notify_shutdown()
+{
+	lockstep_scheduler.notify_shutdown();
+}
+int px4_lockstep_settime_shutdown(const struct timespec *ts)
+{
+	lockstep_scheduler.set_absolute_time(ts_to_abstime(ts), true);
+	return 0;
+}
+
 #endif

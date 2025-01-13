@@ -1961,6 +1961,8 @@ void Commander::run()
 		}
 	}
 
+	arm_auth_deinit();
+
 	rgbled_set_color_and_mode(led_control_s::COLOR_WHITE, led_control_s::MODE_OFF);
 
 	/* close fds */

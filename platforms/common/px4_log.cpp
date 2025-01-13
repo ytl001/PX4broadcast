@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <atomic>
 
 #ifndef MODULE_NAME
 #define MODULE_NAME "log"
@@ -66,6 +67,12 @@ static constexpr const char *__px4_log_level_color[_PX4_LOG_LEVEL_PANIC + 1] {
 	PX4_ANSI_COLOR_RED,    // ERROR
 	PX4_ANSI_COLOR_RED     // PANIC
 };
+void px4_log_finalize(void)
+{
+	orb_unadvertise(orb_log_message_pub);
+	orb_log_message_pub = nullptr;
+
+}
 
 void px4_log_initialize(void)
 {

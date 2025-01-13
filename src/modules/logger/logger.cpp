@@ -928,6 +928,8 @@ void Logger::run()
 		}
 	}
 
+	PX4_INFO("Logger really stopping");
+
 	px4_lockstep_unregister_component(_lockstep_component);
 
 	stop_log_file(LogType::Full);

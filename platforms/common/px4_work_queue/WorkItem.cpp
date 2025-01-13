@@ -84,6 +84,14 @@ bool WorkItem::Init(const wq_config_t &config)
 
 void WorkItem::Deinit()
 {
+
+	if (_wq != nullptr) {
+		_wq->Deinit(this);
+		_wq = nullptr;
+	}
+
+	return;
+
 	// remove any currently queued work
 	if (_wq != nullptr) {
 		// prevent additional insertions

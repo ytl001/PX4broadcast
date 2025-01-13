@@ -39,6 +39,8 @@
 #include <px4_platform_common/px4_config.h>
 #include <px4_platform_common/posix.h>
 #include <px4_platform_common/tasks.h>
+#include <uORB/topics/tune_control.h>
+#include <uORB/topics/uORBTopics.hpp>
 
 #if defined(__PX4_NUTTX) && !defined(CONFIG_BUILD_FLAT) && defined(__KERNEL__)
 #include <px4_platform/board_ctrl.h>
@@ -451,7 +453,7 @@ bool uORB::Manager::orb_data_copy(void *node_handle, void *dst, unsigned &genera
 		return false;
 	}
 
-	if (only_if_updated && !static_cast<const uORB::DeviceNode *>(node_handle)->updates_available(generation)) {
+	if (only_if_updated && static_cast<const uORB::DeviceNode *>(node_handle)->updates_available(generation) == 0) {
 		return false;
 	}
 

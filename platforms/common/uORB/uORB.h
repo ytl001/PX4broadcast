@@ -77,7 +77,7 @@ typedef const struct orb_metadata *orb_id_t;
  *
  * @param _name		The name of the topic.
  */
-#define ORB_ID(_name)		&__orb_##_name
+#define ORB_ID(_name)		(&__orb_##_name)
 
 /**
  * Declare (prototype) the uORB metadata for a topic (used by code generators).
@@ -119,6 +119,7 @@ typedef const struct orb_metadata *orb_id_t;
 __BEGIN_DECLS
 
 int uorb_start(void);
+int uorb_stop(void);
 int uorb_status(void);
 int uorb_top(char **topic_filter, int num_filters);
 

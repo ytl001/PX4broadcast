@@ -411,10 +411,13 @@ WorkQueueManagerStart()
 int
 WorkQueueManagerStop()
 {
+	PX4_INFO("Shutting down manager");
+
 	if (!_wq_manager_should_exit.load()) {
 
 		// error can't shutdown until all WorkItems are removed/stopped
-		if (_wq_manager_running.load() && (_wq_manager_wqs_list->size() > 0)) {
+		// this makes no sense if the following code should be useful
+		if (0 && _wq_manager_running.load() && (_wq_manager_wqs_list->size() > 0)) {
 			PX4_ERR("can't shutdown with active WQs");
 			WorkQueueManagerStatus();
 			return PX4_ERROR;
@@ -434,7 +437,7 @@ WorkQueueManagerStop()
 
 			// wait until they're all stopped (empty list)
 			while (_wq_manager_wqs_list->size() > 0) {
-				px4_usleep(1000);
+				system_usleep(1000); // other usleep issues
 			}
 
 			delete _wq_manager_wqs_list;
@@ -447,7 +450,7 @@ WorkQueueManagerStop()
 			// push nullptr to wake the wq manager task
 			_wq_manager_create_queue->push(nullptr);
 
-			px4_usleep(10000);
+			system_usleep(10000);
 
 			delete _wq_manager_create_queue;
 			_wq_manager_create_queue = nullptr;

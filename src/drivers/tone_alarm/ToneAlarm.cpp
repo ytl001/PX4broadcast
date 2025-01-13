@@ -40,6 +40,7 @@
 #include <px4_platform_common/time.h>
 #include <uORB/Publication.hpp>
 
+#include <csignal>
 using namespace time_literals;
 
 ToneAlarm::ToneAlarm() :
@@ -76,6 +77,8 @@ void ToneAlarm::InterruptStopNote(void *arg)
 
 void ToneAlarm::Run()
 {
+	PX4_INFO("Tone run");
+
 	// Check if circuit breaker is enabled.
 	if (!_circuit_break_initialized) {
 		if (circuit_breaker_enabled("CBRK_BUZZER", CBRK_BUZZER_KEY)) {
@@ -84,6 +87,8 @@ void ToneAlarm::Run()
 
 		_circuit_break_initialized = true;
 	}
+
+	PX4_INFO("Tone Now check exit %d", should_exit());
 
 	if (should_exit()) {
 		_tune_control_sub.unregisterCallback();
@@ -231,6 +236,8 @@ void ToneAlarm::Run()
 	if (!Scheduled() && _tune_control_sub.updated()) {
 		ScheduleDelayed(_tunes.get_maximum_update_interval());
 	}
+
+	PX4_INFO("Done now %d", Scheduled());
 }
 
 int ToneAlarm::task_spawn(int argc, char *argv[])

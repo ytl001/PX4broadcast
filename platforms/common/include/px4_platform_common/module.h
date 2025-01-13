@@ -45,6 +45,9 @@
 #include <px4_platform_common/time.h>
 #include <px4_platform_common/log.h>
 #include <px4_platform_common/tasks.h>
+#include <px4_platform_common/module_manager.h>
+#include <px4_platform_common/px4_work_queue/WorkItem.hpp>
+
 #include <systemlib/px4_macros.h>
 
 #ifdef __cplusplus
@@ -115,7 +118,13 @@ template<class T>
 class ModuleBase
 {
 public:
-	ModuleBase() : _task_should_exit{false} {}
+
+	typedef ModuleBase<T> TBase;
+
+	ModuleBase() : _task_should_exit{false}
+	{
+		static_assert(std::is_base_of<ModuleBase<T>, T>::value, "Should be class T: ModuleBase<T>{...}");
+	}
 	virtual ~ModuleBase() {}
 
 	/**
@@ -127,6 +136,13 @@ public:
 	 */
 	static int main(int argc, char *argv[])
 	{
+		ModuleManager::register_module(ModuleEntry {
+			.name = argv[0],
+			.stop_command = &stop_command,
+			.is_running = &is_running,
+			.request_stop = &static_request_stop,
+		});
+
 		if (argc <= 1 ||
 		    strcmp(argv[1], "-h")    == 0 ||
 		    strcmp(argv[1], "help")  == 0 ||
@@ -240,7 +256,7 @@ public:
 					px4_usleep(10000); // 10 ms
 					lock_module();
 
-					if (++i > 500 && _task_id != -1) { // wait at most 5 sec
+					if (++i > 500 && _task_id != -1 && _object.load() != nullptr) { // wait at most 5 sec
 						PX4_ERR("timeout, forcing stop");
 
 						if (_task_id != task_id_is_work_queue) {
@@ -268,6 +284,23 @@ public:
 
 		unlock_module();
 		return ret;
+	}
+
+
+	static void static_request_stop()
+	{
+		lock_module();
+
+		if (is_running()) {
+			T *object = _object.load();
+
+			if (object) {
+				object->request_stop();
+			}
+		}
+
+		unlock_module();
+
 	}
 
 	/**
@@ -327,6 +360,12 @@ protected:
 	virtual void request_stop()
 	{
 		_task_should_exit.store(true);
+
+		if (std::is_base_of<px4::WorkItem, T>::value) {
+			px4::WorkItem *wi = dynamic_cast<px4::WorkItem *>((T *)this);
+			assert(wi != nullptr);
+			wi->ScheduleNow();
+		}
 	}
 
 	/**
@@ -394,7 +433,7 @@ protected:
 	static px4::atomic<T *> _object;
 
 	/** @var _task_id The task handle: -1 = invalid, otherwise task is assumed to be running. */
-	static int _task_id;
+	volatile static int _task_id;
 
 	/** @var task_id_is_work_queue Value to indicate if the task runs on the work queue. */
 	static constexpr const int task_id_is_work_queue = -2;
@@ -424,7 +463,7 @@ template<class T>
 px4::atomic<T *> ModuleBase<T>::_object{nullptr};
 
 template<class T>
-int ModuleBase<T>::_task_id = -1;
+volatile int ModuleBase<T>::_task_id = -1;
 
 
 #endif /* __cplusplus */
