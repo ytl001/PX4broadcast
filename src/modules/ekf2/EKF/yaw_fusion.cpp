@@ -98,21 +98,16 @@ bool Ekf::fuseYaw(estimator_aid_source1d_s &aid_src_status, const VectorState &H
 		_innov_check_fail_status.flags.reject_yaw = false;
 	}
 
-	if (measurementUpdate(Kfusion, H_YAW, aid_src_status.observation_variance, aid_src_status.innovation)) {
+	measurementUpdate(Kfusion, H_YAW, aid_src_status.observation_variance, aid_src_status.innovation);
 
-		_time_last_heading_fuse = _time_delayed_us;
+	_time_last_heading_fuse = _time_delayed_us;
 
-		aid_src_status.time_last_fuse = _time_delayed_us;
-		aid_src_status.fused = true;
+	aid_src_status.time_last_fuse = _time_delayed_us;
+	aid_src_status.fused = true;
 
-		_fault_status.flags.bad_hdg = false;
+	_fault_status.flags.bad_hdg = false;
 
-		return true;
-	}
-
-	// otherwise
-	_fault_status.flags.bad_hdg = true;
-	return false;
+	return true;
 }
 
 void Ekf::computeYawInnovVarAndH(float variance, float &innovation_variance, VectorState &H_YAW) const
@@ -145,11 +140,13 @@ void Ekf::resetQuatStateYaw(float yaw, float yaw_variance)
 	_output_predictor.resetQuaternion(q_error);
 
 #if defined(CONFIG_EKF2_EXTERNAL_VISION)
+
 	// update EV attitude error filter
 	if (_ev_q_error_initialized) {
 		const Quatf ev_q_error_updated = (q_error * _ev_q_error_filt.getState()).normalized();
 		_ev_q_error_filt.reset(ev_q_error_updated);
 	}
+
 #endif // CONFIG_EKF2_EXTERNAL_VISION
 
 	// record the state change

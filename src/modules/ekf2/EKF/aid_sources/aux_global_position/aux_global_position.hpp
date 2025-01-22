@@ -92,12 +92,13 @@ private:
 		uint8_t lat_lon_reset_counter{};
 	};
 
+	estimator_aid_source2d_s _aid_src_aux_global_position{};
 	RingBuffer<AuxGlobalPositionSample> _aux_global_position_buffer{20}; // TODO: size with _obs_buffer_length and actual publication rate
 	uint64_t _time_last_buffer_push{0};
 
 	enum class Ctrl : uint8_t {
-		HPOS  = (1<<0),
-		VPOS  = (1<<1)
+		HPOS  = (1 << 0),
+		VPOS  = (1 << 1)
 	};
 
 	enum class State {
