@@ -2917,16 +2917,13 @@ int EKF2::print_usage(const char *reason)
 	}
 
 	PRINT_MODULE_DESCRIPTION(
-		R"DESCR_STR(
-### Description
-Attitude and position estimator using an Extended Kalman Filter. It is used for Multirotors and Fixed-Wing.
-
-The documentation can be found on the [ECL/EKF Overview & Tuning](https://docs.px4.io/main/en/advanced_config/tuning_the_ecl_ekf.html) page.
-
-ekf2 can be started in replay mode (`-r`): in this mode, it does not access the system time, but only uses the
-timestamps from the sensor topics.
-
-)DESCR_STR");
+		"### Description\n"
+		"Attitude and position estimator using an Extended Kalman Filter. It is used for Multirotors and Fixed-Wing.\n"
+		"\n"
+		"The documentation can be found on the [ECL/EKF Overview & Tuning](https://docs.px4.io/main/en/advanced_config/tuning_the_ecl_ekf.html) page.\n"
+		"\n"
+		"ekf2 can be started in replay mode (`-r`): in this mode, it does not access the system time, but only uses the\n"
+		"timestamps from the sensor topics.");
 
 	PRINT_MODULE_USAGE_NAME("ekf2", "estimator");
 	PRINT_MODULE_USAGE_COMMAND("start");
@@ -2963,6 +2960,7 @@ extern "C" __EXPORT int ekf2_main(int argc, char *argv[])
 		return ret;
 
 #if defined(CONFIG_EKF2_MULTI_INSTANCE)
+
 	} else if (strcmp(argv[1], "select_instance") == 0) {
 
 		if (EKF2::trylock_module()) {
@@ -2970,6 +2968,7 @@ extern "C" __EXPORT int ekf2_main(int argc, char *argv[])
 				if (argc > 2) {
 					int instance = atoi(argv[2]);
 					_ekf2_selector.load()->RequestInstance(instance);
+
 				} else {
 					EKF2::unlock_module();
 					return EKF2::print_usage("instance required");
@@ -2987,20 +2986,25 @@ extern "C" __EXPORT int ekf2_main(int argc, char *argv[])
 
 		return 0;
 #endif // CONFIG_EKF2_MULTI_INSTANCE
+
 	} else if (strcmp(argv[1], "status") == 0) {
 		if (EKF2::trylock_module()) {
 #if defined(CONFIG_EKF2_MULTI_INSTANCE)
+
 			if (_ekf2_selector.load()) {
 				_ekf2_selector.load()->PrintStatus();
 			}
+
 #endif // CONFIG_EKF2_MULTI_INSTANCE
 
 			bool verbose_status = false;
 
 #if defined(CONFIG_EKF2_VERBOSE_STATUS)
+
 			if (argc > 2 && (strcmp(argv[2], "-v") == 0)) {
 				verbose_status = true;
 			}
+
 #endif // CONFIG_EKF2_VERBOSE_STATUS
 
 			for (int i = 0; i < EKF2_MAX_INSTANCES; i++) {
@@ -3034,6 +3038,7 @@ extern "C" __EXPORT int ekf2_main(int argc, char *argv[])
 					delete inst;
 					_objects[instance].store(nullptr);
 				}
+
 			} else {
 				PX4_ERR("invalid instance %d", instance);
 			}
@@ -3043,6 +3048,7 @@ extern "C" __EXPORT int ekf2_main(int argc, char *argv[])
 			bool was_running = false;
 
 #if defined(CONFIG_EKF2_MULTI_INSTANCE)
+
 			if (_ekf2_selector.load()) {
 				PX4_INFO("stopping ekf2 selector");
 				_ekf2_selector.load()->Stop();
@@ -3050,6 +3056,7 @@ extern "C" __EXPORT int ekf2_main(int argc, char *argv[])
 				_ekf2_selector.store(nullptr);
 				was_running = true;
 			}
+
 #endif // CONFIG_EKF2_MULTI_INSTANCE
 
 			for (int i = 0; i < EKF2_MAX_INSTANCES; i++) {
