@@ -178,9 +178,6 @@ set(msg_files
 	RoverRateStatus.msg
 	RoverSteeringSetpoint.msg
 	RoverThrottleSetpoint.msg
-	RoverDifferentialGuidanceStatus.msg
-	RoverDifferentialSetpoint.msg
-	RoverDifferentialStatus.msg
 	RoverMecanumGuidanceStatus.msg
 	RoverMecanumSetpoint.msg
 	RoverMecanumStatus.msg
