@@ -44,6 +44,7 @@ UavcanBatteryBridge::UavcanBatteryBridge(uavcan::INode &node) :
 	ModuleParams(nullptr),
 	_sub_battery(node),
 	_sub_battery_aux(node),
+	_sub_cbat(node),
 	_warning(battery_status_s::BATTERY_WARNING_NONE),
 	_last_timestamp(0)
 {
@@ -59,8 +60,14 @@ int UavcanBatteryBridge::init()
 		if (uavcan_sub_bat == FILTER_DATA) {
 			_batt_update_mod[instance] = BatteryDataType::Filter;
 
-		} else {
+		} else if (uavcan_sub_bat == RAW_DATA) {
 			_batt_update_mod[instance] = BatteryDataType::Raw;
+
+		} else if (uavcan_sub_bat == RAW_AUX_DATA) {
+			_batt_update_mod[instance] = BatteryDataType::RawAux;
+
+		} else if (uavcan_sub_bat == RAW_AUX_CBAT_DATA) {
+			_batt_update_mod[instance] = BatteryDataType::RawAuxCBAT;
 		}
 	}
 
@@ -72,6 +79,13 @@ int UavcanBatteryBridge::init()
 	}
 
 	res = _sub_battery_aux.start(BatteryInfoAuxCbBinder(this, &UavcanBatteryBridge::battery_aux_sub_cb));
+
+	if (res < 0) {
+		PX4_ERR("failed to start uavcan sub: %d", res);
+		return res;
+	}
+
+	res = _sub_cbat.start(CBATCbBinder(this, &UavcanBatteryBridge::cbat_sub_cb));
 
 	if (res < 0) {
 		PX4_ERR("failed to start uavcan sub: %d", res);
@@ -112,7 +126,7 @@ UavcanBatteryBridge::battery_sub_cb(const uavcan::ReceivedDataStructure<uavcan::
 		_battery_status[instance].discharged_mah = _discharged_mah;
 	}
 
-	_battery_status[instance].remaining = msg.state_of_charge_pct / 100.0f; // between 0 and 1
+	_battery_status[instance].remaining = msg.state_of_charge_pct / 100.0f; // Between 0 and 1
 	// _battery_status[instance].scale = msg.; // Power scaling factor, >= 1, or -1 if unknown
 	_battery_status[instance].temperature = msg.temperature + atmosphere::kAbsoluteNullCelsius; // Kelvin to Celsius
 	// _battery_status[instance].cell_count = msg.;
@@ -125,7 +139,7 @@ UavcanBatteryBridge::battery_sub_cb(const uavcan::ReceivedDataStructure<uavcan::
 	// _battery_status[instance].cycle_count = msg.;
 	_battery_status[instance].time_remaining_s = NAN;
 	// _battery_status[instance].average_time_to_empty = msg.;
-	_battery_status[instance].serial_number = msg.model_instance_id;
+	//_battery_status[instance].serial_number = msg.model_instance_id;
 	_battery_status[instance].id = msg.getSrcNodeID().get();
 
 	if (_batt_update_mod[instance] == BatteryDataType::Raw) {
@@ -186,7 +200,41 @@ UavcanBatteryBridge::battery_aux_sub_cb(const uavcan::ReceivedDataStructure<ardu
 		_battery_status[instance].voltage_cell_v[i] = msg.voltage_cell[i];
 	}
 
-	publish(msg.getSrcNodeID().get(), &_battery_status[instance]);
+	if (_batt_update_mod[instance] == BatteryDataType::RawAux) {
+		publish(msg.getSrcNodeID().get(), &_battery_status[instance]);
+	}
+
+}
+
+
+void
+UavcanBatteryBridge::cbat_sub_cb(const uavcan::ReceivedDataStructure<cuav::equipment::power::CBAT> &msg)
+{
+	uint8_t instance = 0;
+
+	for (instance = 0; instance < battery_status_s::MAX_INSTANCES; instance++) {
+		if (_battery_status[instance].id == msg.getSrcNodeID().get()) {
+			break;
+		}
+	}
+
+
+	if (instance >= battery_status_s::MAX_INSTANCES) {
+		return;
+	}
+
+	determineWarning(_battery_status[instance].remaining);
+	_battery_status[instance].warning = _warning;
+
+	if (_batt_update_mod[instance] == BatteryDataType::RawAuxCBAT) {
+		char ser_num[32] = {0};
+		snprintf(ser_num, 32, "%hu", msg.serial_number);
+		strncpy(_battery_status[instance].serial_number, ser_num, sizeof(_battery_status[instance].serial_number) - 1);
+
+		_battery_status[instance].serial_number[sizeof(_battery_status[instance].serial_number) - 1] = '\0';
+
+		publish(msg.getSrcNodeID().get(), &_battery_status[instance]);
+	}
 }
 
 void
@@ -214,7 +262,7 @@ UavcanBatteryBridge::sumDischarged(hrt_abstime timestamp, float current_a)
 void
 UavcanBatteryBridge::determineWarning(float remaining)
 {
-	// propagate warning state only if the state is higher, otherwise remain in current warning state
+	// Propagate warning state only if new state is higher, otherwise remain in current warning state
 	if (remaining < _param_bat_emergen_thr.get() || (_warning == battery_status_s::BATTERY_WARNING_EMERGENCY)) {
 		_warning = battery_status_s::BATTERY_WARNING_EMERGENCY;
 
