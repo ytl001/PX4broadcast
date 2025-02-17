@@ -99,12 +99,12 @@ void RoverMecanum::generateSteeringSetpoint()
 	if (_manual_control_setpoint_sub.update(&manual_control_setpoint)) {
 		rover_steering_setpoint_s rover_steering_setpoint{};
 		rover_steering_setpoint.timestamp = _timestamp;
-		rover_steering_setpoint.normalized_speed_diff = manual_control_setpoint.roll;
+		rover_steering_setpoint.normalized_speed_diff = manual_control_setpoint.yaw;
 		_rover_steering_setpoint_pub.publish(rover_steering_setpoint);
 		rover_throttle_setpoint_s rover_throttle_setpoint{};
 		rover_throttle_setpoint.timestamp = _timestamp;
 		rover_throttle_setpoint.throttle_body_x = manual_control_setpoint.throttle;
-		rover_throttle_setpoint.throttle_body_y = 0.f;
+		rover_throttle_setpoint.throttle_body_y = manual_control_setpoint.roll;
 		_rover_throttle_setpoint_pub.publish(rover_throttle_setpoint);
 	}
 }
@@ -125,12 +125,15 @@ void RoverMecanum::generateActuatorSetpoint()
 		_rover_steering_setpoint_sub.copy(&_rover_steering_setpoint);
 	}
 
-	float throttle_body_x = RoverControl::throttleControl(_motor_setpoint,
-				_rover_throttle_setpoint.throttle_body_x, _current_motor_setpoint, _param_ro_accel_limit.get(),
-				_param_ro_decel_limit.get(), _param_ro_max_thr_speed.get(), _dt);
+	const float throttle_body_x = RoverControl::throttleControl(_motor_setpoint,
+				      _rover_throttle_setpoint.throttle_body_x, _current_motor_setpoint, _param_ro_accel_limit.get(),
+				      _param_ro_decel_limit.get(), _param_ro_max_thr_speed.get(), _dt);
+	const float throttle_body_y = RoverControl::throttleControl(_motor_setpoint,
+				      _rover_throttle_setpoint.throttle_body_x, _current_motor_setpoint, _param_ro_accel_limit.get(),
+				      _param_ro_decel_limit.get(), _param_ro_max_thr_speed.get(), _dt);
 	actuator_motors_s actuator_motors{};
 	actuator_motors.reversible_flags = _param_r_rev.get();
-	computeInverseKinematics(throttle_body_x,
+	computeInverseKinematics(throttle_body_x, throttle_body_y,
 				 _rover_steering_setpoint.normalized_speed_diff).copyTo(actuator_motors.control);
 	actuator_motors.timestamp = _timestamp;
 	_actuator_motors_pub.publish(actuator_motors);
@@ -138,18 +141,28 @@ void RoverMecanum::generateActuatorSetpoint()
 
 }
 
-Vector2f RoverMecanum::computeInverseKinematics(float throttle_body_x, const float speed_diff_normalized)
+Vector4f RoverMecanum::computeInverseKinematics(float throttle_body_x, float throttle_body_y,
+		const float speed_diff_normalized)
 {
-	float max_motor_command = fabsf(throttle_body_x) + fabsf(speed_diff_normalized);
+	const float total_speed = fabsf(throttle_body_x) + fabsf(throttle_body_y) + fabsf(speed_diff_normalized);
 
-	if (max_motor_command > 1.0f) { // Prioritize yaw rate if a normalized motor command exceeds limit of 1
-		float excess = fabsf(max_motor_command - 1.0f);
-		throttle_body_x -= sign(throttle_body_x) * excess;
+	if (total_speed > 1.f) { // Adjust speed setpoints if infeasible
+		const float theta = atan2f(fabsf(throttle_body_y), fabsf(throttle_body_x));
+		const float magnitude = (1.f - fabsf(speed_diff_normalized)) / (sinf(theta) + cosf(theta));
+		const float normalization = 1.f / (sqrtf(powf(throttle_body_x, 2.f) + powf(throttle_body_y, 2.f)));
+		throttle_body_x *= magnitude * normalization;
+		throttle_body_y *= magnitude * normalization;
+
 	}
 
-	// Calculate the left and right wheel speeds
-	return Vector2f(throttle_body_x - speed_diff_normalized,
-			throttle_body_x + speed_diff_normalized);
+	// Calculate motor commands
+	const float input_data[3] = {throttle_body_x, throttle_body_y, speed_diff_normalized};
+	const Matrix<float, 3, 1> input(input_data);
+	const float m_data[12] = {1.f, -1.f, -1.f, 1.f, 1.f, 1.f, 1.f, 1.f, -1.f, 1.f, -1.f, 1.f};
+	const Matrix<float, 4, 3> m(m_data);
+	const Vector4f motor_commands = m * input;
+
+	return motor_commands;
 }
 
 int RoverMecanum::task_spawn(int argc, char *argv[])

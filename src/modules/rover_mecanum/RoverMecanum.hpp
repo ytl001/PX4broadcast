@@ -103,10 +103,11 @@ private:
 	/**
 	 * @brief Compute normalized motor commands based on normalized setpoints.
 	 * @param throttle_body_x Normalized speed in body x direction [-1, 1].
+	 * @param throttle_body_y Normalized speed in body y direction [-1, 1].
 	 * @param speed_diff_normalized Speed difference between left and right wheels [-1, 1].
-	 * @return Motor speeds for the right and left motors [-1, 1].
+	 * @return Motor speeds [-1, 1].
 	 */
-	Vector2f computeInverseKinematics(float throttle_body_x, const float speed_diff_normalized);
+	Vector4f computeInverseKinematics(float throttle_body_x, float throttle_body_y, const float speed_diff_normalized);
 
 	// uORB subscriptions
 	uORB::Subscription _parameter_update_sub{ORB_ID(parameter_update)};
