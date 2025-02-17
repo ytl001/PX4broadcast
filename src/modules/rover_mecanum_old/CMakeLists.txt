@@ -1,6 +1,6 @@
 ############################################################################
 #
-#   Copyright (c) 2025 PX4 Development Team. All rights reserved.
+#   Copyright (c) 2024 PX4 Development Team. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -31,9 +31,8 @@
 #
 ############################################################################
 
-add_subdirectory(MecanumRateControl)
-add_subdirectory(MecanumAttControl)
-add_subdirectory(MecanumPosVelControl)
+add_subdirectory(RoverMecanumGuidance)
+add_subdirectory(RoverMecanumControl)
 
 px4_add_module(
 	MODULE modules__rover_mecanum
@@ -42,11 +41,10 @@ px4_add_module(
 		RoverMecanum.cpp
 		RoverMecanum.hpp
 	DEPENDS
-		MecanumRateControl
-		MecanumAttControl
-		MecanumPosVelControl
+		RoverMecanumGuidance
+		RoverMecanumControl
 		px4_work_queue
-		rover_control
+		pure_pursuit
 	MODULE_CONFIG
 		module.yaml
 )
