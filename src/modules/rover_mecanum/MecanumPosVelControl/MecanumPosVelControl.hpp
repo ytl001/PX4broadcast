@@ -131,23 +131,22 @@ private:
 	void updateAutoSubscriptions();
 
 	/**
-	 * @brief Calculate the speed setpoint. During waypoint transition the speed is restricted to
+	 * @brief Calculate the velocity magnitude setpoint. During waypoint transition the speed is restricted to
 	 * Maximum_speed * (1 - normalized_transition_angle * RM_MISS_VEL_GAIN).
 	 * On straight lines it is based on a speed trajectory such that the rover will arrive at the next waypoint transition
 	 * with the desired waypoiny transition speed under consideration of the maximum deceleration and jerk.
-	 * @param cruising_speed Cruising speed [m/s].
+	 * @param auto_speed Default auto speed [m/s].
 	 * @param distance_to_curr_wp Distance to the current waypoint [m].
 	 * @param max_decel Maximum allowed deceleration [m/s^2].
 	 * @param max_jerk Maximum allowed jerk [m/s^3].
 	 * @param waypoint_transition_angle Angle between the prevWP-currWP and currWP-nextWP line segments [rad]
-	 * @param max_speed Maximum speed setpoint [m/s]
-	 * @param trans_drv_trn Heading error threshold to switch from driving to turning [rad].
+	 * @param max_speed Maximum velocity magnitude setpoint [m/s]
 	 * @param miss_spd_gain Tuning parameter for the speed reduction during waypoint transition.
-	 * @return Speed setpoint [m/s].
+	 * @param nav_state Vehicle navigation state
+	 * @return Velocity magnitude setpoint [m/s].
 	 */
-	float calcSpeedSetpoint(float cruising_speed, float distance_to_curr_wp, float max_decel, float max_jerk,
-				float waypoint_transition_angle, float max_speed, float trans_drv_trn, float miss_spd_gain);
-
+	float calcVelocityMagnitude(float auto_speed, float distance_to_curr_wp, float max_decel, float max_jerk,
+				    float waypoint_transition_angle, float max_speed, float miss_spd_gain, int nav_state);
 
 	/**
 	 * @brief Check if the necessary parameters are set.
@@ -202,7 +201,8 @@ private:
 	Vector2f _curr_wp_ned{};
 	Vector2f _prev_wp_ned{};
 	Vector2f _next_wp_ned{};
-	float _cruising_speed{0.f};
+	float _auto_speed{0.f};
+	float _auto_yaw{0.f};
 	float _waypoint_transition_angle{0.f}; // Angle between the prevWP-currWP and currWP-nextWP line segments [rad]
 	bool _prev_param_check_passed{true};
 
@@ -218,6 +218,7 @@ private:
 
 	DEFINE_PARAMETERS(
 		(ParamFloat<px4::params::RM_MISS_SPD_GAIN>) _param_rm_miss_spd_gain,
+		(ParamFloat<px4::params::RM_COURSE_CTL_TH>) _param_rm_course_ctl_th,
 		(ParamFloat<px4::params::RO_MAX_THR_SPEED>) _param_ro_max_thr_speed,
 		(ParamFloat<px4::params::RO_SPEED_P>) 	    _param_ro_speed_p,
 		(ParamFloat<px4::params::RO_SPEED_I>)       _param_ro_speed_i,

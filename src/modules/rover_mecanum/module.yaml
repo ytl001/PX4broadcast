@@ -48,3 +48,19 @@ parameters:
         increment: 0.01
         decimal: 2
         default: -1
+
+      RM_COURSE_CTL_TH:
+        description:
+          short: Threshold to update course control in manual position mode
+          long: |
+            Threshold for the angle between the active cruise direction and the cruise direction given
+            by the stick inputs.
+            This can be understood as a deadzone for the combined stick inputs for forward/backwards
+            and lateral speed which defines a course direction.
+        type: float
+        unit: rad
+        min: 0
+        max: 3.14
+        increment: 0.01
+        decimal: 2
+        default: 0.17
