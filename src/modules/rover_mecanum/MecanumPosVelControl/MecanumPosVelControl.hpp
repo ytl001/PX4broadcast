@@ -69,15 +69,6 @@
 using namespace matrix;
 
 /**
- * @brief Enum class for the different states of guidance.
- */
-enum class GuidanceState {
-	SPOT_TURNING, // The vehicle is currently turning on the spot.
-	DRIVING,      // The vehicle is currently driving.
-	STOPPED  // The vehicle is stopped.
-};
-
-/**
  * @brief Class for mecanum position/velocity control.
  */
 class MecanumPosVelControl : public ModuleParams
@@ -177,15 +168,15 @@ private:
 	uORB::Subscription _mission_result_sub{ORB_ID(mission_result)};
 	uORB::Subscription _home_position_sub{ORB_ID(home_position)};
 	uORB::Subscription _rover_steering_setpoint_sub{ORB_ID(rover_steering_setpoint)};
-	vehicle_control_mode_s _vehicle_control_mode{};
-	offboard_control_mode_s _offboard_control_mode{};
+	vehicle_control_mode_s    _vehicle_control_mode{};
+	offboard_control_mode_s   _offboard_control_mode{};
 	rover_steering_setpoint_s _rover_steering_setpoint{};
 
 	// uORB publications
-	uORB::Publication<rover_rate_setpoint_s> _rover_rate_setpoint_pub{ORB_ID(rover_rate_setpoint)};
-	uORB::Publication<rover_throttle_setpoint_s> _rover_throttle_setpoint_pub{ORB_ID(rover_throttle_setpoint)};
-	uORB::Publication<rover_attitude_setpoint_s> _rover_attitude_setpoint_pub{ORB_ID(rover_attitude_setpoint)};
-	uORB::Publication<rover_velocity_status_s> _rover_velocity_status_pub{ORB_ID(rover_velocity_status)};
+	uORB::Publication<rover_rate_setpoint_s>        _rover_rate_setpoint_pub{ORB_ID(rover_rate_setpoint)};
+	uORB::Publication<rover_throttle_setpoint_s>    _rover_throttle_setpoint_pub{ORB_ID(rover_throttle_setpoint)};
+	uORB::Publication<rover_attitude_setpoint_s>    _rover_attitude_setpoint_pub{ORB_ID(rover_attitude_setpoint)};
+	uORB::Publication<rover_velocity_status_s>      _rover_velocity_status_pub{ORB_ID(rover_velocity_status)};
 	uORB::Publication<position_controller_status_s>	_position_controller_status_pub{ORB_ID(position_controller_status)};
 
 	// Variables
@@ -199,6 +190,8 @@ private:
 	float _vehicle_yaw{0.f};
 	float _max_yaw_rate{0.f};
 	float _speed_body_x_setpoint{0.f};
+	float _speed_body_y_setpoint{0.f};
+	float _pos_ctl_yaw_setpoint{0.f};
 	float _dt{0.f};
 	int _nav_state{0};
 	bool _course_control{false}; // Indicates if the rover is doing course control in manual position mode.
@@ -214,18 +207,17 @@ private:
 	bool _prev_param_check_passed{true};
 
 	// Controllers
-	PID _pid_speed;
-	SlewRate<float> _speed_setpoint;
+	PID _pid_speed_x;
+	PID _pid_speed_y;
+	SlewRate<float> _speed_x_setpoint;
+	SlewRate<float> _speed_y_setpoint;
 
 	// Class Instances
-	PurePursuit _posctl_pure_pursuit{this}; // Pure pursuit library
+	PurePursuit   _posctl_pure_pursuit{this}; // Pure pursuit library
 	MapProjection _global_ned_proj_ref{}; // Transform global to NED coordinates
-	GuidanceState _currentState{GuidanceState::DRIVING}; // The current state of the guidance.
 
 	DEFINE_PARAMETERS(
-		(ParamFloat<px4::params::RD_TRANS_TRN_DRV>) _param_rd_trans_trn_drv,
-		(ParamFloat<px4::params::RD_TRANS_DRV_TRN>) _param_rd_trans_drv_trn,
-		(ParamFloat<px4::params::RD_MISS_SPD_GAIN>) _param_rd_miss_spd_gain,
+		(ParamFloat<px4::params::RM_MISS_SPD_GAIN>) _param_rm_miss_spd_gain,
 		(ParamFloat<px4::params::RO_MAX_THR_SPEED>) _param_ro_max_thr_speed,
 		(ParamFloat<px4::params::RO_SPEED_P>) 	    _param_ro_speed_p,
 		(ParamFloat<px4::params::RO_SPEED_I>)       _param_ro_speed_i,
