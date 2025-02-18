@@ -116,27 +116,29 @@ private:
 	uORB::Subscription _vehicle_control_mode_sub{ORB_ID(vehicle_control_mode)};
 	uORB::Subscription _manual_control_setpoint_sub{ORB_ID(manual_control_setpoint)};
 	uORB::Subscription _actuator_motors_sub{ORB_ID(actuator_motors)};
-	vehicle_control_mode_s _vehicle_control_mode{};
+	vehicle_control_mode_s    _vehicle_control_mode{};
 	rover_steering_setpoint_s _rover_steering_setpoint{};
 	rover_throttle_setpoint_s _rover_throttle_setpoint{};
 
 	// uORB publications
-	uORB::PublicationMulti<actuator_motors_s> _actuator_motors_pub{ORB_ID(actuator_motors)};
+	uORB::PublicationMulti<actuator_motors_s>    _actuator_motors_pub{ORB_ID(actuator_motors)};
 	uORB::Publication<rover_throttle_setpoint_s> _rover_throttle_setpoint_pub{ORB_ID(rover_throttle_setpoint)};
 	uORB::Publication<rover_steering_setpoint_s> _rover_steering_setpoint_pub{ORB_ID(rover_steering_setpoint)};
 
 	// Class instances
-	MecanumRateControl _mecanum_rate_control{this};
-	MecanumAttControl _mecanum_att_control{this};
+	MecanumRateControl   _mecanum_rate_control{this};
+	MecanumAttControl    _mecanum_att_control{this};
 	MecanumPosVelControl _mecanum_pos_vel_control{this};
 
 	// Variables
 	hrt_abstime _timestamp{0};
 	float _dt{0.f};
-	float _current_motor_setpoint{0.f};
+	float _current_throttle_body_x{0.f};
+	float _current_throttle_body_y{0.f};
 
 	// Controllers
-	SlewRate<float> _motor_setpoint{0.f};
+	SlewRate<float> _throttle_body_x_setpoint{0.f};
+	SlewRate<float> _throttle_body_y_setpoint{0.f};
 
 	// Parameters
 	DEFINE_PARAMETERS(

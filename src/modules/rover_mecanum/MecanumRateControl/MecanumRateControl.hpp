@@ -108,15 +108,15 @@ private:
 	uORB::Subscription _rover_rate_setpoint_sub{ORB_ID(rover_rate_setpoint)};
 	uORB::Subscription _vehicle_angular_velocity_sub{ORB_ID(vehicle_angular_velocity)};
 	uORB::Subscription _actuator_motors_sub{ORB_ID(actuator_motors)};
-	vehicle_control_mode_s _vehicle_control_mode{};
+	vehicle_control_mode_s  _vehicle_control_mode{};
 	offboard_control_mode_s _offboard_control_mode{};
-	rover_rate_setpoint_s _rover_rate_setpoint{};
+	rover_rate_setpoint_s   _rover_rate_setpoint{};
 
 	// uORB publications
-	uORB::Publication<rover_rate_setpoint_s> _rover_rate_setpoint_pub{ORB_ID(rover_rate_setpoint)};
+	uORB::Publication<rover_rate_setpoint_s>     _rover_rate_setpoint_pub{ORB_ID(rover_rate_setpoint)};
 	uORB::Publication<rover_throttle_setpoint_s> _rover_throttle_setpoint_pub{ORB_ID(rover_throttle_setpoint)};
 	uORB::Publication<rover_steering_setpoint_s> _rover_steering_setpoint_pub{ORB_ID(rover_steering_setpoint)};
-	uORB::Publication<rover_rate_status_s> _rover_rate_status_pub{ORB_ID(rover_rate_status)};
+	uORB::Publication<rover_rate_status_s>       _rover_rate_status_pub{ORB_ID(rover_rate_status)};
 
 	// Variables
 	hrt_abstime _timestamp{0};
@@ -132,8 +132,8 @@ private:
 	SlewRate<float> _adjusted_yaw_rate_setpoint{0.f};
 
 	DEFINE_PARAMETERS(
-		(ParamFloat<px4::params::RD_WHEEL_TRACK>)   _param_rd_wheel_track,
-		(ParamFloat<px4::params::RD_MAX_THR_YAW_R>) _param_rd_max_thr_yaw_r,
+		(ParamFloat<px4::params::RM_WHEEL_TRACK>)   _param_rm_wheel_track,
+		(ParamFloat<px4::params::RM_MAX_THR_YAW_R>) _param_rm_max_thr_yaw_r,
 		(ParamFloat<px4::params::RO_YAW_RATE_LIM>)  _param_ro_yaw_rate_limit,
 		(ParamFloat<px4::params::RO_YAW_RATE_TH>)   _param_ro_yaw_rate_th,
 		(ParamFloat<px4::params::RO_YAW_RATE_P>)    _param_ro_yaw_rate_p,

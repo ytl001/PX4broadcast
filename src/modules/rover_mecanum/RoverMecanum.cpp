@@ -55,7 +55,8 @@ void RoverMecanum::updateParams()
 	ModuleParams::updateParams();
 
 	if (_param_ro_accel_limit.get() > FLT_EPSILON && _param_ro_max_thr_speed.get() > FLT_EPSILON) {
-		_motor_setpoint.setSlewRate(_param_ro_accel_limit.get() / _param_ro_max_thr_speed.get());
+		_throttle_body_x_setpoint.setSlewRate(_param_ro_accel_limit.get() / _param_ro_max_thr_speed.get());
+		_throttle_body_y_setpoint.setSlewRate(_param_ro_accel_limit.get() / _param_ro_max_thr_speed.get());
 	}
 }
 
@@ -65,7 +66,7 @@ void RoverMecanum::Run()
 		updateParams();
 	}
 
-	hrt_abstime timestamp_prev = _timestamp;
+	const hrt_abstime timestamp_prev = _timestamp;
 	_timestamp = hrt_absolute_time();
 	_dt = math::constrain(_timestamp - timestamp_prev, 1_ms, 5000_ms) * 1e-6f;
 
@@ -77,9 +78,9 @@ void RoverMecanum::Run()
 		_vehicle_control_mode_sub.copy(&_vehicle_control_mode);
 	}
 
-	bool full_manual_mode_enabled = _vehicle_control_mode.flag_control_manual_enabled
-					&& !_vehicle_control_mode.flag_control_position_enabled && !_vehicle_control_mode.flag_control_attitude_enabled
-					&& !_vehicle_control_mode.flag_control_rates_enabled;
+	const bool full_manual_mode_enabled = _vehicle_control_mode.flag_control_manual_enabled
+					      && !_vehicle_control_mode.flag_control_position_enabled && !_vehicle_control_mode.flag_control_attitude_enabled
+					      && !_vehicle_control_mode.flag_control_rates_enabled;
 
 	if (full_manual_mode_enabled) { // Manual mode
 		generateSteeringSetpoint();
@@ -118,18 +119,19 @@ void RoverMecanum::generateActuatorSetpoint()
 	if (_actuator_motors_sub.updated()) {
 		actuator_motors_s actuator_motors{};
 		_actuator_motors_sub.copy(&actuator_motors);
-		_current_motor_setpoint = actuator_motors.control[0];
+		_current_throttle_body_x = (actuator_motors.control[0] + actuator_motors.control[1]) / 2.f;
+		_current_throttle_body_y = (actuator_motors.control[2] - actuator_motors.control[0]) / 2.f;
 	}
 
 	if (_rover_steering_setpoint_sub.updated()) {
 		_rover_steering_setpoint_sub.copy(&_rover_steering_setpoint);
 	}
 
-	const float throttle_body_x = RoverControl::throttleControl(_motor_setpoint,
-				      _rover_throttle_setpoint.throttle_body_x, _current_motor_setpoint, _param_ro_accel_limit.get(),
+	const float throttle_body_x = RoverControl::throttleControl(_throttle_body_x_setpoint,
+				      _rover_throttle_setpoint.throttle_body_x, _current_throttle_body_x, _param_ro_accel_limit.get(),
 				      _param_ro_decel_limit.get(), _param_ro_max_thr_speed.get(), _dt);
-	const float throttle_body_y = RoverControl::throttleControl(_motor_setpoint,
-				      _rover_throttle_setpoint.throttle_body_x, _current_motor_setpoint, _param_ro_accel_limit.get(),
+	const float throttle_body_y = RoverControl::throttleControl(_throttle_body_y_setpoint,
+				      _rover_throttle_setpoint.throttle_body_y, _current_throttle_body_y, _param_ro_accel_limit.get(),
 				      _param_ro_decel_limit.get(), _param_ro_max_thr_speed.get(), _dt);
 	actuator_motors_s actuator_motors{};
 	actuator_motors.reversible_flags = _param_r_rev.get();
