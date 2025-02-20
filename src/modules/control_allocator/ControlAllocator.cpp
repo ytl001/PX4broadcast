@@ -474,8 +474,9 @@ ControlAllocator::Run()
 			}
 		}
 
+		preflight_check_update_state();
+
 		if (_preflight_check_running) {
-			preflight_check_update_state();
 			preflight_check_overwrite_torque_sp(c);
 		}
 
@@ -540,30 +541,31 @@ void ControlAllocator::preflight_check_stop()
 
 void ControlAllocator::preflight_check_update_state()
 {
+	if (_preflight_check_running) {
+		// bool tiltrotor = dynamic_cast<ActuatorEffectivenessTiltrotorVTOL*>(_actuator_effectiveness) != nullptr;
+		bool tiltrotor = _effectiveness_source_id == EffectivenessSource::TILTROTOR_VTOL;
 
-	// bool tiltrotor = dynamic_cast<ActuatorEffectivenessTiltrotorVTOL*>(_actuator_effectiveness) != nullptr;
-	bool tiltrotor = _effectiveness_source_id == EffectivenessSource::TILTROTOR_VTOL;
+		// cycle through roll, pitch, yaw, and for each one inject positive and
+		// negative torque setpoints.
 
-	// cycle through roll, pitch, yaw, and for each one inject positive and
-	// negative torque setpoints.
+		int n_axes = 3;
 
-	int n_axes = 3;
+		if (tiltrotor) {
+			n_axes = 4;
+		}
 
-	if (tiltrotor) {
-		n_axes = 4;
-	}
+		int max_phase = 2 * n_axes;
 
-	int max_phase = 2 * n_axes;
+		hrt_abstime now = hrt_absolute_time();
 
-	hrt_abstime now = hrt_absolute_time();
+		if (now - _last_preflight_check_update >= 500_ms) {
+			_preflight_check_phase++;
+			_last_preflight_check_update = now;
 
-	if (now - _last_preflight_check_update >= 500_ms) {
-		_preflight_check_phase++;
-		_last_preflight_check_update = now;
-
-		// terminate after one round
-		if (_preflight_check_phase >= max_phase) {
-			_preflight_check_running = false;
+			// terminate after one round
+			if (_preflight_check_phase >= max_phase) {
+				_preflight_check_running = false;
+			}
 		}
 	}
 }
