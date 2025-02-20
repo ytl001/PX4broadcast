@@ -844,10 +844,6 @@ Commander::handle_command(const vehicle_command_s &cmd)
 							desired_nav_state = vehicle_status_s::NAVIGATION_STATE_AUTO_PRECLAND;
 							break;
 
-						case PX4_CUSTOM_SUB_MODE_AUTO_CS_PREFLIGHT_CHECK:
-							desired_nav_state = vehicle_status_s::NAVIGATION_STATE_CS_PREFLIGHT_CHECK;
-							break;
-
 						case PX4_CUSTOM_SUB_MODE_EXTERNAL1...PX4_CUSTOM_SUB_MODE_EXTERNAL8:
 							desired_nav_state = vehicle_status_s::NAVIGATION_STATE_EXTERNAL1 + (custom_sub_mode - PX4_CUSTOM_SUB_MODE_EXTERNAL1);
 							break;

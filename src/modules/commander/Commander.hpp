@@ -157,8 +157,6 @@ private:
 
 	unsigned handleCommandActuatorTest(const vehicle_command_s &cmd);
 
-	unsigned handleCommandControlTest(const vehicle_command_s &cmd);
-
 	void executeActionRequest(const action_request_s &action_request);
 
 	void printRejectMode(uint8_t nav_state);
@@ -287,8 +285,6 @@ private:
 	bool _status_changed{true};
 
 	vehicle_land_detected_s	_vehicle_land_detected{};
-
-	uint8_t _prev_nav_state;
 
 	// commander publications
 	actuator_armed_s        _actuator_armed{};
