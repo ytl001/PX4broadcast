@@ -390,6 +390,7 @@ ControlAllocator::Run()
 
 				} else {
 					result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_TEMPORARILY_REJECTED;
+					PX4_INFO("Control surface preflight check rejected (armed)");
 				}
 			}
 

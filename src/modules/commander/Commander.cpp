@@ -302,6 +302,11 @@ int Commander::custom_command(int argc, char *argv[])
 		return 0;
 	}
 
+	if (!strcmp(argv[0], "cs_check")) {
+		send_vehicle_command(vehicle_command_s::VEHICLE_CMD_DO_PREFLIGHT_CS_CHECK);
+		return 0;
+	}
+
 	if (!strcmp(argv[0], "arm")) {
 		float param2 = 0.f;
 
@@ -1834,20 +1839,6 @@ void Commander::run()
 		if (_failure_detector.update(_vehicle_status, _vehicle_control_mode)) {
 			_vehicle_status.failure_detector_status = _failure_detector.getStatus().value;
 			_status_changed = true;
-		}
-
-		// do the control surface preflight check only if pre-armed. this means we need:
-		// COM_PREARM_MODE = 1 (Safety Button) or 2 (Always).
-		if (_actuator_armed.prearmed) {
-			if (_param_com_do_cs_check.get()) {
-
-				hrt_abstime now = hrt_absolute_time();
-
-				if (now - _last_cs_preflight_check_command > 5_s) {
-					send_vehicle_command(vehicle_command_s::VEHICLE_CMD_DO_PREFLIGHT_CS_CHECK);
-					_last_cs_preflight_check_command = now;
-				}
-			}
 		}
 
 		modeManagementUpdate();
