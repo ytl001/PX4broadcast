@@ -256,8 +256,6 @@ private:
 	hrt_abstime _last_disarmed_timestamp{0};
 	hrt_abstime _overload_start{0};		///< time when CPU overload started
 
-	hrt_abstime _last_cs_preflight_check_command{0};
-
 #if !defined(CONFIG_ARCH_LEDS) && defined(BOARD_HAS_CONTROL_STATUS_LEDS)
 	hrt_abstime _led_armed_state_toggle {0};
 #endif

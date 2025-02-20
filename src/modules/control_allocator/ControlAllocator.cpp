@@ -542,11 +542,11 @@ void ControlAllocator::preflight_check_stop()
 void ControlAllocator::preflight_check_update_state()
 {
 	if (_preflight_check_running) {
-		// bool tiltrotor = dynamic_cast<ActuatorEffectivenessTiltrotorVTOL*>(_actuator_effectiveness) != nullptr;
+
 		bool tiltrotor = _effectiveness_source_id == EffectivenessSource::TILTROTOR_VTOL;
 
-		// cycle through roll, pitch, yaw, and for each one inject positive and
-		// negative torque setpoints.
+		// cycle through roll, pitch, yaw(, collective tilt) and for
+		// each one inject positive and negative torque setpoints.
 
 		int n_axes = 3;
 
