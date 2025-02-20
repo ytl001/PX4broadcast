@@ -345,7 +345,10 @@ ControlAllocator::Run()
 		if (_vehicle_status_sub.update(&vehicle_status)) {
 
 			_armed = vehicle_status.arming_state == vehicle_status_s::ARMING_STATE_ARMED;
-			_preflight_check_running = vehicle_status.nav_state == vehicle_status_s::NAVIGATION_STATE_CS_PREFLIGHT_CHECK;
+
+			if (_armed) {
+				preflight_check_stop();
+			}
 
 			ActuatorEffectiveness::FlightPhase flight_phase{ActuatorEffectiveness::FlightPhase::HOVER_FLIGHT};
 
@@ -369,6 +372,38 @@ ControlAllocator::Run()
 
 			// Forward to effectiveness source
 			_actuator_effectiveness->setFlightPhase(flight_phase);
+		}
+	}
+
+	{
+		vehicle_command_s vehicle_command;
+
+		if (_vehicle_command_sub.update(&vehicle_command)) {
+
+			uint8_t result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_ACCEPTED;
+
+			if (vehicle_command.command == vehicle_command_s::VEHICLE_CMD_DO_PREFLIGHT_CS_CHECK) {
+				if (!_armed) {
+					// currently this does not check prearmed status. if not prearmed, it will just do nothing.
+					// should we output some sort of mild warning in that case?
+					preflight_check_start();
+
+				} else {
+					result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_TEMPORARILY_REJECTED;
+				}
+			}
+
+			if (vehicle_command.from_external) {
+				vehicle_command_ack_s command_ack{};
+				command_ack.timestamp = hrt_absolute_time();
+				command_ack.command = vehicle_command.command;
+				command_ack.result = result;
+				command_ack.target_system = vehicle_command.source_system;
+				command_ack.target_component = vehicle_command.source_component;
+
+				uORB::Publication<vehicle_command_ack_s> command_ack_pub{ORB_ID(vehicle_command_ack)};
+				command_ack_pub.publish(command_ack);
+			}
 		}
 	}
 
@@ -491,6 +526,17 @@ ControlAllocator::Run()
 	perf_end(_loop_perf);
 }
 
+void ControlAllocator::preflight_check_start()
+{
+	_preflight_check_phase = 0;
+	_preflight_check_running = true;
+}
+
+void ControlAllocator::preflight_check_stop()
+{
+	_preflight_check_running = false;
+}
+
 void ControlAllocator::preflight_check_update_state()
 {
 
@@ -512,8 +558,12 @@ void ControlAllocator::preflight_check_update_state()
 
 	if (now - _last_preflight_check_update >= 500_ms) {
 		_preflight_check_phase++;
-		_preflight_check_phase %= max_phase;  // or quit once we did the whole thing once?
 		_last_preflight_check_update = now;
+
+		// terminate after one round
+		if (_preflight_check_phase >= max_phase) {
+			_preflight_check_running = false;
+		}
 	}
 }
 
